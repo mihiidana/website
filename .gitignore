@@ -19,8 +19,13 @@ pnpm-debug.log*
 .env.production
 .dev.vars
 
+# agent skills (installed output; see skills-lock.json)
+.agents/
+
 # macOS-specific files
 .DS_Store
 
 # jetbrains setting folder
 .idea/
+
+.playwright*
