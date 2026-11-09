@@ -32,14 +32,20 @@ To learn more about the folder structure of an Astro project, refer to [our guid
 
 All commands are run from the root of the project, from a terminal:
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `pnpm install`             | Installs dependencies                            |
+| Command                | Action                                           |
+| :--------------------- | :----------------------------------------------- |
+| `pnpm install`         | Installs dependencies                            |
 | `pnpm dev`             | Starts local dev server at `localhost:4321`      |
 | `pnpm build`           | Build your production site to `./dist/`          |
 | `pnpm preview`         | Preview your build locally, before deploying     |
+| `pnpm check`           | Lint and format check with Biome                 |
+| `pnpm check:fix`       | Fix lint and format issues with Biome            |
+| `pnpm deploy`          | Build and deploy to Cloudflare Workers           |
 | `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
 | `pnpm astro -- --help` | Get help using the Astro CLI                     |
+
+Deploy locally with `wrangler login` first. In CI, deploys require the
+`CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` secrets (see `.env.example`).
 
 ## 👀 Want to learn more?
 
