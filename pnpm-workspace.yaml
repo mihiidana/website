@@ -1,2 +1,6 @@
+allowBuilds:
+  esbuild: true
+  simple-git-hooks: true
+  workerd: true
 minimumReleaseAgeExclude:
   - astro@7.4.8
