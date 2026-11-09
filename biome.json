@@ -13,10 +13,28 @@
     "lineEnding": "lf",
     "useEditorconfig": true
   },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
   "linter": {
     "enabled": true,
     "rules": {
-      "preset": "recommended"
+      "preset": "recommended",
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "patterns": [
+              {
+                "group": ["./**", "../**"],
+                "message": "Use the @/ import alias instead of a relative import."
+              }
+            ]
+          }
+        }
+      }
     }
   },
   "assist": {
