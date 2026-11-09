@@ -1,0 +1,31 @@
+---
+import Container from "@/components/container.astro";
+import { site } from "@/lib/site";
+
+const year = new Date().getFullYear();
+---
+
+<footer class="border-t">
+  <Container
+    class="flex flex-col items-center justify-between gap-3 py-8 font-mono text-xs text-muted-foreground sm:flex-row"
+  >
+    <p>
+      © {year}{" "}
+      <a
+        href={site.socials.github}
+        target="_blank"
+        rel="noreferrer"
+        aria-label={`${site.name} on GitHub (opens in a new tab)`}
+        class="underline underline-offset-4 transition-colors hover:text-foreground focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+      >
+        {site.name}
+      </a>
+    </p>
+    <a
+      href="#top"
+      class="transition-colors hover:text-foreground focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+    >
+      Back to Top
+    </a>
+  </Container>
+</footer>
