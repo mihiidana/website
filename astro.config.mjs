@@ -1,5 +1,7 @@
 // @ts-check
 
+import react from "@astrojs/react";
+import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
 
 // https://astro.build/config
@@ -8,7 +10,14 @@ import { defineConfig } from "astro/config";
 // astro build && wrangler deploy
 export default defineConfig({
   output: "static",
+
   devToolbar: {
     enabled: false,
+  },
+
+  integrations: [react()],
+
+  vite: {
+    plugins: [tailwindcss()],
   },
 });
