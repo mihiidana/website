@@ -10,6 +10,8 @@ Manage the background server with `astro dev stop`, `astro dev status`, and `ast
 
 ## Architecture
 
+Site identity, description, socials, and page copy live in `src/lib/site.ts`. Pages render from that config instead of hardcoding copy; add a key under `pages` and a matching route under `src/pages/`. Use the `@/` import alias — Biome rejects relative imports.
+
 Always build code cleanly, modularly, and with proper architecture and separation of concerns. Never simply bolt on a feature because I asked for it. If you can’t find an easy way to build it naturally, and you'd recommend a refactor to make the whole thing cleanly, stop your work ahead of time and say so.
 
 ## Documentation
