@@ -1,52 +1,62 @@
-# Astro Starter Kit: Basics
+# mihidana
 
-```sh
-pnpm create astro@latest -- --template basics
-```
+Personal site of mihidana, published at <https://hey.mihiidana.workers.dev>.
+A home for mihidana's writing, projects, and small tools under one domain and one voice.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+See [PRODUCT.md](./PRODUCT.md) for the product definition and what is intentionally
+not built yet.
 
-## 🚀 Project Structure
+## Stack
 
-Inside of your Astro project, you'll see the following folders and files:
+- [Astro 7](https://docs.astro.build) static output
+- React 19 islands via `@astrojs/react`
+- Tailwind CSS 4 via `@tailwindcss/vite`
+- [shadcn/ui](https://ui.shadcn.com) components on Base UI (`base-nova`, neutral base color)
+- Biome for linting and formatting
+- Cloudflare Workers static assets via Wrangler
+
+Requires Node `>=26.13.0` and pnpm `12.18.0` (`packageManager`).
+
+## Project Structure
 
 ```text
 /
-├── public/
-│   └── favicon.svg
+├── public/               # favicons, PWA icons, site.webmanifest
 ├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
+│   ├── components/       # astro components; ui/ holds shadcn components
+│   ├── layouts/          # Layout.astro: head metadata, theme bootstrap, chrome
+│   ├── lib/              # site.ts (identity + copy), utils.ts (cn)
+│   ├── pages/            # file-based routes
+│   └── styles/           # global.css: Tailwind, shadcn tokens, fonts
+├── components.json       # shadcn config
+├── wrangler.jsonc        # Cloudflare Worker name and dist/ assets
+└── astro.config.mjs
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+Site identity, description, socials, and page copy are centralized in
+[`src/lib/site.ts`](./src/lib/site.ts). Edit `site.pages.home` to change the
+homepage; adding a page means adding a key under `pages` and rendering it from a
+matching route under `src/pages/`. Use the `@/` import alias rather than relative
+imports: Biome enforces this.
 
-## 🧞 Commands
+## Commands
 
-All commands are run from the root of the project, from a terminal:
+All commands run from the project root:
 
-| Command                | Action                                           |
-| :--------------------- | :----------------------------------------------- |
-| `pnpm install`         | Installs dependencies                            |
-| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
-| `pnpm build`           | Build your production site to `./dist/`          |
-| `pnpm preview`         | Preview your build locally, before deploying     |
-| `pnpm check`           | Lint and format check with Biome                 |
-| `pnpm check:fix`       | Fix lint and format issues with Biome            |
-| `pnpm deploy`          | Build and deploy to Cloudflare Workers           |
-| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `pnpm astro -- --help` | Get help using the Astro CLI                     |
+| Command          | Action                                  |
+| :--------------- | :-------------------------------------- |
+| `pnpm install`   | Installs dependencies                   |
+| `pnpm dev`       | Starts dev server at `localhost:4321`   |
+| `pnpm build`     | Builds the production site to `./dist/` |
+| `pnpm preview`   | Previews the build locally              |
+| `pnpm check`     | Lint and format check with Biome        |
+| `pnpm check:fix` | Fix lint and format issues with Biome   |
+| `pnpm deploy`    | Build and deploy to Cloudflare Workers  |
+| `pnpm astro ...` | Run Astro CLI commands                  |
 
-Deploy locally with `wrangler login` first. In CI, deploys require the
-`CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` secrets (see `.env.example`).
+`pnpm check` and `pnpm build` are also run by CI on every push and pull request
+to `main`. The `deploy` job runs `pnpm deploy` on pushes to `main` and requires
+the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` secrets; see
+[`.env.example`](./.env.example) for the variable names.
 
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+To deploy locally, run `wrangler login` once, then `pnpm deploy`.
