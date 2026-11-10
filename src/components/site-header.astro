@@ -1,20 +1,17 @@
 ---
-import Container from "@/components/container.astro";
-import ModeToggle from "@/components/mode-toggle.astro";
+import ModeToggle from "@/components/layouts/mode-toggle.astro";
 import { site } from "@/lib/site";
 ---
 
 <header class="sticky top-0 z-40 border-b bg-background/85 backdrop-blur-md">
-  <Container>
-    <nav aria-label="Main" class="flex h-16 items-center justify-between">
-      <a
-        href="/"
-        aria-label={`${site.name} home`}
-        class="font-signature text-5xl leading-none transition-opacity hover:opacity-70 focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-      >
-        {site.wordmark}
-      </a>
-      <ModeToggle />
-    </nav>
-  </Container>
+  <nav aria-label="Main" class="flex h-16 items-center justify-between">
+    <a
+      href="/"
+      aria-label={`${site.name} home`}
+      class="font-signature text-5xl leading-none transition-opacity hover:opacity-70 focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+    >
+      {site.wordmark}
+    </a>
+    <ModeToggle />
+  </nav>
 </header>
