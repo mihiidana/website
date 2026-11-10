@@ -33,7 +33,7 @@ export type SiteConfig = {
 
 export const site = {
   name: "mihidana",
-  wordmark: "md",
+  wordmark: "m",
   description: "Personal website of mihidana.",
   url: "https://hey.mihiidana.workers.dev",
   socials: {
