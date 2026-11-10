@@ -23,11 +23,11 @@ export default defineConfig({
 
   fonts: [
     {
-      name: "Inter",
-      cssVariable: "--font-inter",
-      provider: fontProviders.fontsource(),
-      weights: ["100 900"],
-      styles: ["normal"],
+      name: "Satoshi",
+      cssVariable: "--font-satoshi",
+      provider: fontProviders.fontshare(),
+      weights: ["300 900"],
+      styles: ["normal", "italic"],
       subsets: ["latin"],
       fallbacks: ["sans-serif"],
     },
