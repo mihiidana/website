@@ -24,18 +24,18 @@ Writing lives as Markdown files committed to this repository and is built by Ast
 
 ## Capabilities and Constraints
 
-- Astro 7 with React 19 islands, Tailwind CSS 4, shadcn/ui components (Base UI, `base-nova` style, neutral base color), `lucide-react` icons, and Inter Variable as the loaded sans face.
+- Astro 7 with React 19 islands, Tailwind CSS 4, shadcn/ui components (Base UI, `base-nova` style, neutral base color), `lucide-react` icons, Inter Variable as the loaded sans face, and Caveat Variable for the `font-signature` wordmark.
 - Static-first output served as Cloudflare Worker assets; no confirmed server-side runtime features beyond wrangler asset hosting.
 - Confirmed visitor capabilities, all currently unimplemented: read posts, browse projects, use small browser tools, contact mihidana, and learn who mihidana is (about).
 - Publishing mechanism is Markdown in the repo; post structure (taxonomy, drafts, feeds) is not yet decided.
-- Undecided and not to be invented: project list, tool lineup, contact channels, social profiles, post topics, analytics, RSS/sitemap behavior.
-- Content is currently empty: only a scaffold page and one button demo exist.
+- Undecided and not to be invented: project list, tool lineup, contact channels, post topics, analytics, RSS/sitemap behavior. The only linked social profile is GitHub (`site.socials.github`).
+- Content is currently limited to a single homepage that renders its intro copy from `src/lib/site.ts`, plus site header, footer, and a light/dark theme toggle. No posts, projects, or tools exist yet.
 
 ## Brand Commitments
 
 - Public identity: `mihidana`; domain `https://hey.mihiidana.workers.dev`.
 - An existing favicon and PWA icon set plus `site.webmanifest` under `public/` use the name mihidana and must not be replaced with a different identity without an explicit rebrand.
-- No other voice, logo, color, or typography commitment has been established.
+- Visual identity in code: the `md` wordmark in Caveat Variable (`font-signature`), a neutral monochrome shadcn token palette, and a dark theme by default with a persisted light/dark toggle. No logo mark or broader voice guideline has been established.
 
 ## Evidence on Hand
 
