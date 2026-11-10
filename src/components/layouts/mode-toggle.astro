@@ -1,0 +1,84 @@
+---
+import { Moon, Sun } from "lucide-react";
+
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+---
+
+<button
+  type="button"
+  data-theme-toggle
+  class={cn(buttonVariants({ variant: "ghost", size: "icon" }), "relative")}
+  aria-label="Toggle color theme"
+  title="Toggle color theme"
+>
+  <Sun
+    aria-hidden="true"
+    className="size-4 rotate-0 scale-100 transition-transform duration-300 dark:-rotate-90 dark:scale-0"
+  />
+  <Moon
+    aria-hidden="true"
+    className="absolute size-4 rotate-90 scale-0 transition-transform duration-300 dark:rotate-0 dark:scale-100"
+  />
+</button>
+
+<script>
+const THEME_STORAGE_KEY = "theme";
+
+type ViewTransitionDocument = Document & {
+  startViewTransition?: (update: () => void) => { ready: Promise<void> };
+};
+
+function applyTheme(isDark: boolean) {
+  document.documentElement.classList.toggle("dark", isDark);
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute("content", isDark ? "#0a0a0a" : "#ffffff");
+
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, isDark ? "dark" : "light");
+  } catch {
+    // Storage can be blocked; the theme still changes for this page view.
+  }
+}
+
+function toggleTheme(event: MouseEvent) {
+  const isDark = !document.documentElement.classList.contains("dark");
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const doc = document as ViewTransitionDocument;
+
+  if (!doc.startViewTransition || reduceMotion) {
+    applyTheme(isDark);
+    return;
+  }
+
+  const button = (event.currentTarget as HTMLButtonElement).getBoundingClientRect();
+  // Keyboard activation reports 0,0; start the reveal from the button instead.
+  const x = event.detail === 0 ? button.left + button.width / 2 : event.clientX;
+  const y = event.detail === 0 ? button.top + button.height / 2 : event.clientY;
+  const radius = Math.hypot(
+    Math.max(x, window.innerWidth - x),
+    Math.max(y, window.innerHeight - y),
+  );
+
+  const transition = doc.startViewTransition(() => applyTheme(isDark));
+
+  void transition.ready
+    .then(() => {
+      document.documentElement.animate(
+        {
+          clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`],
+        },
+        {
+          duration: 500,
+          easing: "ease-in-out",
+          pseudoElement: "::view-transition-new(root)",
+        },
+      );
+    })
+    .catch(() => {});
+}
+
+const themeToggle = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
+themeToggle?.addEventListener("click", toggleTheme);
+</script>
