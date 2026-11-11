@@ -1,8 +1,14 @@
 ---
 import Layout from "@/components/layouts/Layout.astro";
+import Resources from "@/components/sections/resources.astro";
+import TechCraft from "@/components/sections/tech-craft.astro";
+import Clock from "@/components/widgets/clock";
+import LedMatrix from "@/components/widgets/led-matrix";
+import MusicPlayer from "@/components/widgets/music-player";
 import { site } from "@/lib/site";
 
 const page = site.pages.home;
+const { widgets, resources, techStack } = page;
 ---
 
 <Layout>
@@ -13,7 +19,23 @@ const page = site.pages.home;
     <p class="text-pretty text-lg text-muted-foreground">{page.intro}</p>
   </div>
 
-  {page.sections.length > 0 && (
+  {widgets && (
+    <div class="mt-12 grid auto-rows-fr grid-cols-12 gap-3.5">
+      <div class="col-span-12 grid min-w-0 md:col-span-6">
+        <MusicPlayer client:visible track={widgets.music} />
+      </div>
+      <div class="col-span-12 flex gap-3.5 md:contents">
+        <div class="grid min-w-0 flex-1 md:col-span-3">
+          <Clock client:idle />
+        </div>
+        <div class="grid min-w-0 flex-1 md:col-span-3">
+          <LedMatrix client:visible />
+        </div>
+      </div>
+    </div>
+  )}
+
+  {(page.sections.length > 0 || resources || techStack) && (
     <div class="mt-14 flex flex-col gap-10">
       {page.sections.map((section) => (
         <section class="border-t pt-6">
@@ -35,6 +57,8 @@ const page = site.pages.home;
           )}
         </section>
       ))}
+      {resources && <Resources heading={resources.heading} items={resources.items} />}
+      {techStack && <TechCraft heading={techStack.heading} items={techStack.items} />}
     </div>
   )}
 </Layout>
