@@ -16,10 +16,38 @@ export type SiteSection = {
   links?: readonly SiteLink[];
 };
 
+export type SiteTrack = {
+  label: string;
+  title: string;
+  artist: string;
+  artwork: string;
+  audio: string;
+  href: string;
+};
+
+export type SiteResource = {
+  title: string;
+  source: string;
+  href: string;
+};
+
+export type SiteWidgets = {
+  music: SiteTrack;
+};
+
 export type SitePage = {
   title: string;
   intro: string;
   sections: readonly SiteSection[];
+  widgets?: SiteWidgets;
+  resources?: {
+    heading: string;
+    items: readonly SiteResource[];
+  };
+  techStack?: {
+    heading: string;
+    items: readonly string[];
+  };
 };
 
 export type SiteConfig = {
@@ -44,7 +72,51 @@ export const site = {
       title: "Hello!",
       intro:
         "Welcome to my corner of the internet. There's a bit of everything here, from projects and personal interests to ideas, experiments, and everything in between.",
+      widgets: {
+        music: {
+          label: "Recently played",
+          title: "Inside of Love",
+          artist: "Nada Surf",
+          artwork: "/audio/inside-of-love.jpg",
+          audio: "/audio/inside-of-love.mp3",
+          href: "https://www.youtube.com/watch?v=fDjwUNaKL_g",
+        },
+      },
       sections: [],
+      resources: {
+        heading: "Resources that shaped how I think",
+        items: [
+          {
+            title: "Taste for Makers",
+            source: "paulgraham.com",
+            href: "https://paulgraham.com/taste.html",
+          },
+          {
+            title: "Developing Taste",
+            source: "emilkowal.ski",
+            href: "https://emilkowal.ski",
+          },
+          {
+            title: "Taste is Eating SV",
+            source: "workingtheorys.com",
+            href: "https://workingtheorys.com",
+          },
+        ],
+      },
+      techStack: {
+        heading: "Tech & Craft",
+        items: [
+          "TypeScript",
+          "React",
+          "Next.js",
+          "Tailwind CSS",
+          "Framer Motion",
+          "Web Audio API",
+          "GLSL / Shaders",
+          "Node.js",
+          "Figma",
+        ],
+      },
     },
   },
 } as const satisfies SiteConfig;
