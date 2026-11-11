@@ -15,11 +15,7 @@ interface MusicPlayerProps {
   artwork?: string;
 }
 
-export default function MusicPlayer({
-  class: className,
-  track,
-  artwork,
-}: MusicPlayerProps) {
+export default function MusicPlayer({ class: className, track, artwork }: MusicPlayerProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
