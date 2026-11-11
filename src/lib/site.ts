@@ -94,12 +94,12 @@ export const site = {
           {
             title: "Developing Taste",
             source: "emilkowal.ski",
-            href: "https://emilkowal.ski",
+            href: "https://emilkowal.ski/ui/developing-taste",
           },
           {
             title: "Taste is Eating SV",
             source: "workingtheorys.com",
-            href: "https://workingtheorys.com",
+            href: "https://www.workingtheorys.com/p/taste-is-eating-silicon-valley",
           },
         ],
       },
