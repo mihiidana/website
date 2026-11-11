@@ -29,6 +29,15 @@
   animation-duration: 1s;
 }
 
+.eq {
+  opacity: 0;
+  transition: opacity 0.3s ease-out;
+}
+
+.player[data-playing="true"] .eq {
+  opacity: 1;
+}
+
 .player[data-playing="true"] .bar {
   animation-play-state: running;
 }
@@ -37,5 +46,9 @@
   .bar {
     height: 6px;
     animation: none;
+  }
+
+  .eq {
+    transition: none;
   }
 }
