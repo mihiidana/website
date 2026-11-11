@@ -20,6 +20,7 @@ export type SiteTrack = {
   label: string;
   title: string;
   artist: string;
+  album: string;
   artwork: string;
   audio: string;
   href: string;
@@ -46,7 +47,7 @@ export type SitePage = {
   };
   techStack?: {
     heading: string;
-    items: readonly string[];
+    items: readonly SiteLink[];
   };
 };
 
@@ -77,6 +78,7 @@ export const site = {
           label: "Recently played",
           title: "Inside of Love",
           artist: "Nada Surf",
+          album: "Let Go",
           artwork: "/audio/inside-of-love.jpg",
           audio: "/audio/inside-of-love.mp3",
           href: "https://www.youtube.com/watch?v=fDjwUNaKL_g",
@@ -106,15 +108,18 @@ export const site = {
       techStack: {
         heading: "Tech & Craft",
         items: [
-          "TypeScript",
-          "React",
-          "Next.js",
-          "Tailwind CSS",
-          "Framer Motion",
-          "Web Audio API",
-          "GLSL / Shaders",
-          "Node.js",
-          "Figma",
+          { label: "TypeScript", href: "https://www.typescriptlang.org/docs/" },
+          { label: "React", href: "https://react.dev/" },
+          { label: "Next.js", href: "https://nextjs.org/docs" },
+          { label: "Tailwind CSS", href: "https://tailwindcss.com/docs" },
+          { label: "Framer Motion", href: "https://motion.dev/docs/react" },
+          {
+            label: "Web Audio API",
+            href: "https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API",
+          },
+          { label: "GLSL / Shaders", href: "https://thebookofshaders.com/" },
+          { label: "Node.js", href: "https://nodejs.org/docs/latest/api" },
+          { label: "Figma", href: "https://help.figma.com" },
         ],
       },
     },
