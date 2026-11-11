@@ -1,0 +1,26 @@
+---
+import { Badge } from "@/components/ui/badge";
+
+interface Props {
+  heading: string;
+  items: readonly string[];
+}
+
+const { heading, items } = Astro.props;
+---
+
+<section aria-labelledby="tech-heading" class="border-t pt-6">
+  <h2 id="tech-heading" class="text-lg font-semibold tracking-tight">{heading}</h2>
+  <ul class="mt-4 flex flex-wrap gap-1.5">
+    {items.map((item) => (
+      <li>
+        <Badge
+          variant="outline"
+          className="h-7 rounded-md px-2.5 font-mono text-xs font-normal text-muted-foreground transition-colors hover:text-foreground"
+        >
+          {item}
+        </Badge>
+      </li>
+    ))}
+  </ul>
+</section>
