@@ -11,6 +11,11 @@ import { defineConfig, fontProviders } from "astro/config";
 export default defineConfig({
   output: "static",
 
+  image: {
+    // Only these hosts may be downloaded and optimized at build time.
+    domains: ["img.youtube.com"],
+  },
+
   devToolbar: {
     enabled: false,
   },
