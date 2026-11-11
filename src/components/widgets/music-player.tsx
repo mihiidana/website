@@ -11,9 +11,15 @@ import { cn } from "@/lib/utils";
 interface MusicPlayerProps {
   class?: string;
   track: SiteTrack;
+  /** Pre-optimized artwork URL (build-time processed); falls back to track.artwork. */
+  artwork?: string;
 }
 
-export default function MusicPlayer({ class: className, track }: MusicPlayerProps) {
+export default function MusicPlayer({
+  class: className,
+  track,
+  artwork,
+}: MusicPlayerProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
@@ -96,7 +102,7 @@ export default function MusicPlayer({ class: className, track }: MusicPlayerProp
       {/* Square artwork panel, full-bleed to the left edge. */}
       <div className="relative aspect-square h-full shrink-0 overflow-hidden">
         <img
-          src={track.artwork}
+          src={artwork ?? track.artwork}
           alt=""
           width={320}
           height={320}
