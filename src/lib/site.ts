@@ -76,12 +76,12 @@ export const site = {
       widgets: {
         music: {
           label: "Recently played",
-          title: "Inside of Love",
-          artist: "Nada Surf",
-          album: "Let Go",
-          artwork: "/audio/inside-of-love.jpg",
-          audio: "/audio/inside-of-love.mp3",
-          href: "https://www.youtube.com/watch?v=fDjwUNaKL_g",
+          title: "One Trick Phony",
+          artist: "Sasha Alex Sloan",
+          album: "I Blame The World",
+          artwork: "https://img.youtube.com/vi/kG9qlxLMa0o/maxresdefault.jpg",
+          audio: "/audio/One_Trick_Phony.mp3",
+          href: "https://music.youtube.com/watch?v=kG9qlxLMa0o",
         },
       },
       sections: [],

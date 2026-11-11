@@ -1,4 +1,5 @@
 ---
+import { getImage } from "astro:assets";
 import Layout from "@/components/layouts/Layout.astro";
 import Resources from "@/components/sections/resources.astro";
 import TechCraft from "@/components/sections/tech-craft.astro";
@@ -9,6 +10,13 @@ import { site } from "@/lib/site";
 
 const page = site.pages.home;
 const { widgets, resources, techStack } = page;
+
+// Widget displays the artwork at ~320px; download once at build time and
+// convert to webp instead of hotlinking YouTube's 1280px jpeg.
+const track = widgets?.music;
+const optimizedArtwork = track
+  ? (await getImage({ src: track.artwork, width: 320, height: 320, format: "webp" })).src
+  : undefined;
 ---
 
 <Layout>
@@ -22,7 +30,7 @@ const { widgets, resources, techStack } = page;
   {widgets && (
     <div class="mt-12 grid auto-rows-fr grid-cols-12 gap-3.5">
       <div class="col-span-12 grid min-w-0 md:col-span-6">
-        <MusicPlayer client:visible track={widgets.music} />
+        <MusicPlayer client:visible track={widgets.music} artwork={optimizedArtwork} />
       </div>
       <div class="col-span-12 flex gap-3.5 md:contents">
         <div class="grid min-w-0 flex-1 md:col-span-3">
