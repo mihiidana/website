@@ -73,7 +73,7 @@ export default function MusicPlayer({ class: className, track }: MusicPlayerProp
           </div>
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate font-medium text-foreground">{track.title}</h3>
+          <h2 className="truncate font-medium text-foreground">{track.title}</h2>
           <p className="truncate text-sm text-muted-foreground">{track.artist}</p>
         </div>
       </div>
@@ -94,7 +94,6 @@ export default function MusicPlayer({ class: className, track }: MusicPlayerProp
           type="button"
           variant="secondary"
           size="sm"
-          aria-pressed={playing}
           aria-label={playing ? `Pause ${track.title}` : `Play ${track.title}`}
           onClick={toggle}
           className="rounded-full transition-transform active:scale-95"
