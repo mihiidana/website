@@ -1,0 +1,40 @@
+---
+import { ArrowUpRight } from "lucide-react";
+
+import { Card } from "@/components/ui/card";
+import type { SiteResource } from "@/lib/site";
+
+interface Props {
+  heading: string;
+  items: readonly SiteResource[];
+}
+
+const { heading, items } = Astro.props;
+---
+
+<section aria-labelledby="resources-heading" class="border-t pt-6">
+  <h2 id="resources-heading" class="text-lg font-semibold tracking-tight">{heading}</h2>
+  <ul class="mt-4 grid gap-3 sm:grid-cols-3">
+    {items.map((item) => (
+      <li>
+        <a
+          href={item.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="group block h-full rounded-xl focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+        >
+          <Card className="h-full gap-1 p-3 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:ring-foreground/25">
+            <span class="flex items-center justify-between gap-2 text-sm font-medium">
+              {item.title}
+              <ArrowUpRight
+                className="size-3.5 text-muted-foreground transition-all duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground"
+                aria-hidden="true"
+              />
+            </span>
+            <span class="font-mono text-xs text-muted-foreground">{item.source}</span>
+          </Card>
+        </a>
+      </li>
+    ))}
+  </ul>
+</section>
