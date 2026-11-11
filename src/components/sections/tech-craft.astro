@@ -1,9 +1,10 @@
 ---
 import { Badge } from "@/components/ui/badge";
+import type { SiteLink } from "@/lib/site";
 
 interface Props {
   heading: string;
-  items: readonly string[];
+  items: readonly SiteLink[];
 }
 
 const { heading, items } = Astro.props;
@@ -14,12 +15,19 @@ const { heading, items } = Astro.props;
   <ul class="mt-4 flex flex-wrap gap-1.5">
     {items.map((item) => (
       <li>
-        <Badge
-          variant="outline"
-          className="h-7 rounded-md px-2.5 font-mono text-xs font-normal text-muted-foreground transition-colors hover:text-foreground"
+        <a
+          href={item.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="rounded-md focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
-          {item}
-        </Badge>
+          <Badge
+            variant="outline"
+            className="h-7 rounded-md px-2.5 font-mono text-xs font-normal text-muted-foreground"
+          >
+            {item.label}
+          </Badge>
+        </a>
       </li>
     ))}
   </ul>
