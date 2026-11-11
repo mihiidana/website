@@ -107,6 +107,7 @@ export default function LedMatrix({ class: className }: LedMatrixProps) {
       const rect = canvas.getBoundingClientRect();
       hoverX = Math.floor(((event.clientX - rect.left) / rect.width) * GRID);
       hoverY = Math.floor(((event.clientY - rect.top) / rect.height) * GRID);
+      if (!frame) render(0);
     };
 
     const onPointerLeave = () => {
