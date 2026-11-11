@@ -22,6 +22,7 @@ function setAngle(element: HTMLElement | null, degrees: number) {
 
 export default function Clock({ class: className }: ClockProps) {
   const [digital, setDigital] = useState(false);
+  const clockRef = useRef<HTMLButtonElement>(null);
   const hourHandRef = useRef<HTMLSpanElement>(null);
   const minuteHandRef = useRef<HTMLSpanElement>(null);
   const secondHandRef = useRef<HTMLSpanElement>(null);
@@ -81,17 +82,43 @@ export default function Clock({ class: className }: ClockProps) {
       return () => window.clearInterval(interval);
     }
 
-    let frame = window.requestAnimationFrame(function tick() {
-      update();
-      frame = window.requestAnimationFrame(tick);
-    });
+    const clock = clockRef.current;
+    if (!clock) return;
 
-    return () => window.cancelAnimationFrame(frame);
+    let frame = 0;
+
+    const stop = () => {
+      window.cancelAnimationFrame(frame);
+      frame = 0;
+    };
+
+    const intersectionObserver = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !frame) {
+          update();
+          frame = window.requestAnimationFrame(function tick() {
+            update();
+            frame = window.requestAnimationFrame(tick);
+          });
+        } else if (!entry.isIntersecting) {
+          stop();
+        }
+      },
+      { threshold: 0 },
+    );
+
+    intersectionObserver.observe(clock);
+
+    return () => {
+      stop();
+      intersectionObserver.disconnect();
+    };
   }, []);
 
   return (
     <Card className={cn("@container justify-center p-2", className)}>
       <button
+        ref={clockRef}
         type="button"
         onClick={() => setDigital((value) => !value)}
         aria-label={
