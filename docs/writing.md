@@ -1,7 +1,24 @@
-# Writing a post
+# Writing
 
 Posts are Markdown or MDX files committed to `src/content/blog/`. There is no
 CMS, no database, and no preview service: write a file, commit, build, deploy.
+
+## Where writing appears
+
+| Surface                      | What it shows                                                                            |
+| ---------------------------- | ---------------------------------------------------------------------------------------- |
+| Homepage **Writing** section | The four newest published posts (`recentPosts()` in `src/lib/blog.ts`).                  |
+| `/blog/`                     | The full archive, newest first.                                                          |
+| `/rss.xml`                   | Every published post.                                                                    |
+| Sitemap                      | Every published post.                                                                    |
+| Header                       | **Nothing.** There is deliberately no nav link; the homepage section is the entry point. |
+
+The homepage slices the same filtered, sorted list the archive uses, so a draft
+can never appear there and the order can never disagree. With no published
+posts the section is not rendered at all — no empty heading.
+
+Publication dates decide the order: newest first, and equal dates fall back to
+the post ID so builds are deterministic.
 
 ## Where posts go
 
@@ -76,7 +93,7 @@ header, `<meta property="article:*">`, and `BlogPosting` JSON-LD.
 
 ## Links and images
 
-- Internal links are root-relative: `[the blog](/blog/)`, `[a post](/blog/hello-world/)`.
+- Internal links are root-relative: `[the archive](/blog/)`, `[a post](/blog/hello-world/)`.
   Trailing slashes match the built output.
 - External links are plain absolute URLs; the site does not add `target`
   attributes for you, and it should not.
@@ -103,6 +120,11 @@ Always write alt text. It is the only description a screen reader gets.
 
 - Tables, blockquotes (`>`), horizontal rules (`---`), and inline `code` are
   styled by the `prose` typography utility (tokens mapped in `src/styles/prose.css`).
+- Fenced code blocks are highlighted at build time by Shiki using
+  `github-light-high-contrast` and `github-dark-high-contrast`
+  (`astro.config.mjs`). The high-contrast palettes are required: the stock
+  GitHub themes fail WCAG AA on comments and constants. Both themes render on
+  the same `--muted` surface; only token colors switch with the theme.
 - Prefer short paragraphs and sentences. The reading column is about 65
   characters wide.
 
@@ -140,6 +162,14 @@ the component work:
 Never hydrate a whole article because one component is interactive, and never
 use `client:only` in a post: it costs a blank frame and defeats static
 rendering.
+
+## Starter content
+
+The four posts currently in `src/content/blog/` are demonstration articles that
+exercise the publishing system end to end: plain Markdown, tables, code blocks,
+and one MDX article with a hydrated Svelte demo. They are ordinary posts — edit
+them, repurpose them, or delete them. Removing all of them is safe: the archive
+shows its empty state and the homepage simply drops the Writing section.
 
 ## Templates
 

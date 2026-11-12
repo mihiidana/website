@@ -14,9 +14,14 @@ export function postPath(id: string): string {
   return `/blog/${id}/`;
 }
 
-/** Newest first. `getCollection()` order is not deterministic. */
+/**
+ * Newest first. `getCollection()` order is not deterministic, so equal
+ * publication dates fall back to the ID to keep listings stable across builds.
+ */
 export function sortByDate(posts: readonly BlogPost[]): BlogPost[] {
-  return [...posts].sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+  return [...posts].sort(
+    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf() || a.id.localeCompare(b.id),
+  );
 }
 
 /**
@@ -31,6 +36,15 @@ export function isPublished(post: BlogPost): boolean {
 /** Filters drafts and sorts newest first — the order every surface uses. */
 export function publishedPosts(posts: readonly BlogPost[]): BlogPost[] {
   return sortByDate(posts.filter(isPublished));
+}
+
+/**
+ * The homepage shows the newest few posts only. Same filtered, sorted list as
+ * the archive — just sliced — so the homepage can never show a draft or a
+ * different order.
+ */
+export function recentPosts(posts: readonly BlogPost[], limit = 4): BlogPost[] {
+  return publishedPosts(posts).slice(0, limit);
 }
 
 /** Machine-readable date for `<time datetime>` and feeds. */

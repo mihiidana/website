@@ -30,22 +30,42 @@
   text-underline-offset: 4px;
 }
 
+/*
+ * Tables scroll horizontally instead of squeezing columns, and code inside
+ * cells never breaks mid-token (semantic token names are long and hyphenated).
+ */
+.prose :where(table) {
+  display: block;
+  overflow-x: auto;
+}
+
+.prose :where(table) :where(code) {
+  white-space: nowrap;
+}
+
 .prose :where(code):not(:where(pre *, [class~="not-prose"] *))::before,
 .prose :where(code):not(:where(pre *, [class~="not-prose"] *))::after {
   content: "";
 }
 
 /*
- * Shiki dual themes (see astro.config.mjs). With `defaultColor: false` Shiki
- * writes both palettes as CSS variables on every token, so the theme toggle
- * switches syntax colors with no extra JavaScript. `!important` is required
- * because Shiki emits these values as inline `style` attributes.
+ * Shiki dual themes (see astro.config.mjs). Shiki inlines the light palette on
+ * every token; the dark palette is emitted as `--shiki-dark` variables, so the
+ * theme toggle switches syntax colors with no extra JavaScript. `!important`
+ * is required because those values arrive as inline `style` attributes.
  */
 /* biome-ignore-start lint/complexity/noImportantStyles: overriding Shiki's inline styles */
-.dark .astro-code,
+/* One surface color in both themes; only the token colors change. */
+.prose .astro-code {
+  background-color: var(--muted) !important;
+}
+
+.dark .astro-code {
+  color: var(--shiki-dark) !important;
+}
+
 .dark .astro-code span {
   color: var(--shiki-dark) !important;
-  background-color: var(--shiki-dark-bg) !important;
   font-style: var(--shiki-dark-font-style) !important;
   font-weight: var(--shiki-dark-font-weight) !important;
   text-decoration: var(--shiki-dark-text-decoration) !important;

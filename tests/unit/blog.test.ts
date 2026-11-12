@@ -1,7 +1,14 @@
 import { describe, expect, test } from "vitest";
 
 import type { BlogPost } from "@/lib/blog";
-import { displayDate, isoDate, postPath, publishedPosts, sortByDate } from "@/lib/blog";
+import {
+  displayDate,
+  isoDate,
+  postPath,
+  publishedPosts,
+  recentPosts,
+  sortByDate,
+} from "@/lib/blog";
 
 function post(id: string, pubDate: string, draft = false): BlogPost {
   return {
@@ -34,6 +41,14 @@ describe("sortByDate", () => {
   });
 });
 
+describe("sortByDate tie-break", () => {
+  test("equal dates fall back to the id so ordering is stable", () => {
+    const input = [post("c", "2026-03-01"), post("a", "2026-03-01"), post("b", "2026-03-01")];
+    expect(sortByDate(input).map((entry) => entry.id)).toEqual(["a", "b", "c"]);
+    expect(sortByDate([...input].reverse()).map((entry) => entry.id)).toEqual(["a", "b", "c"]);
+  });
+});
+
 describe("publishedPosts", () => {
   test("drops drafts and sorts the rest", () => {
     const input = [
@@ -51,6 +66,34 @@ describe("publishedPosts", () => {
 
   test("returns an empty list for an empty collection", () => {
     expect(publishedPosts([])).toEqual([]);
+  });
+});
+
+describe("recentPosts", () => {
+  test("takes the newest published posts up to the limit", () => {
+    const input = [
+      post("oldest", "2026-01-01"),
+      post("newest", "2026-06-01"),
+      post("draft", "2026-07-01", true),
+      post("middle", "2026-03-01"),
+      post("second", "2026-05-01"),
+      post("fifth", "2026-02-01"),
+    ];
+    expect(recentPosts(input, 4).map((entry) => entry.id)).toEqual([
+      "newest",
+      "second",
+      "middle",
+      "fifth",
+    ]);
+  });
+
+  test("returns fewer than the limit when fewer posts are published", () => {
+    expect(recentPosts([post("only", "2026-01-01")], 4).map((entry) => entry.id)).toEqual(["only"]);
+  });
+
+  test("returns nothing for an empty or fully drafted collection", () => {
+    expect(recentPosts([], 4)).toEqual([]);
+    expect(recentPosts([post("draft", "2026-01-01", true)], 4)).toEqual([]);
   });
 });
 

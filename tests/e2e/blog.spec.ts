@@ -43,16 +43,18 @@ async function discoverPosts(): Promise<Post[]> {
 
 const posts = await discoverPosts();
 const drafts = posts.filter((post) => post.draft);
+// Mirrors sortByDate(): newest first, then ID ascending so equal dates keep a
+// stable order across builds.
 const published = posts
   .filter((post) => !post.draft)
-  .sort((a, b) => Date.parse(b.pubDate) - Date.parse(a.pubDate));
+  .sort((a, b) => Date.parse(b.pubDate) - Date.parse(a.pubDate) || a.id.localeCompare(b.id));
 
 test("the blog index links every published post, newest first", async ({ page }) => {
   await page.goto(CONTENT_PREFIX);
   await expect(page.locator("h1")).toHaveCount(1);
 
   if (published.length === 0) {
-    await expect(page.locator("main#main")).toContainText(site.blog.empty);
+    await expect(page.locator("main#main")).toContainText(site.writing.empty);
     return;
   }
 
@@ -77,7 +79,7 @@ for (const post of published) {
     await expect(page.locator("main#main article header time").first()).toBeVisible();
     // A link back to the listing, scoped to the article's breadcrumb.
     await expect(
-      page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: /Blog/ }),
+      page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: /Writing/ }),
     ).toHaveAttribute("href", "/blog/");
 
     // Canonical URLs are absolute and built from `site` in astro.config.mjs,

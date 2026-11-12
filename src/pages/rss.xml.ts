@@ -9,8 +9,8 @@ export const GET: APIRoute = async (context) => {
   const posts = publishedPosts(await getCollection("blog"));
 
   return rss({
-    title: site.blog.feedTitle,
-    description: site.blog.feedDescription,
+    title: site.writing.feedTitle,
+    description: site.writing.feedDescription,
     site: context.site ?? site.url,
     // Matches the `directory` build format: every page lives at `/path/`.
     trailingSlash: true,

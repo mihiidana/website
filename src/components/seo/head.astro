@@ -40,7 +40,7 @@ const imageUrl = image ? new URL(image, Astro.site).href : undefined;
 <title>{pageTitle}</title>
 <meta name="description" content={description}>
 <link rel="canonical" href={canonicalUrl}>
-<link rel="alternate" type="application/rss+xml" title={site.blog.feedTitle} href="/rss.xml">
+<link rel="alternate" type="application/rss+xml" title={site.writing.feedTitle} href="/rss.xml">
 
 <!-- Open Graph -->
 <meta property="og:title" content={pageTitle}>

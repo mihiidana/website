@@ -1,11 +1,15 @@
 ---
 import { getImage } from "astro:assets";
+import { getCollection } from "astro:content";
+
 import Layout from "@/components/layouts/Layout.astro";
 import Resources from "@/components/sections/resources.astro";
 import TechCraft from "@/components/sections/tech-craft.astro";
+import Writing from "@/components/sections/writing.astro";
 import Clock from "@/components/widgets/clock.svelte";
 import LedMatrix from "@/components/widgets/led-matrix.svelte";
 import MusicPlayer from "@/components/widgets/music-player.svelte";
+import { recentPosts } from "@/lib/blog";
 import { site } from "@/lib/site";
 
 const page = site.pages.home;
@@ -17,6 +21,10 @@ const track = widgets?.music;
 const optimizedArtwork = track
   ? (await getImage({ src: track.artwork, width: 320, height: 320, format: "webp" })).src
   : undefined;
+
+// Newest four published posts, sharing the archive's filter and order. The
+// section renders nothing at all until the first post exists.
+const writing = recentPosts(await getCollection("blog"));
 ---
 
 <Layout>
@@ -43,8 +51,9 @@ const optimizedArtwork = track
     </div>
   )}
 
-  {(page.sections.length > 0 || resources || techStack) && (
+  {(writing.length > 0 || page.sections.length > 0 || resources || techStack) && (
     <div class="mt-14 flex flex-col gap-10">
+      {writing.length > 0 && <Writing posts={writing} />}
       {page.sections.map((section) => (
         <section class="border-t pt-6">
           <h2 class="text-lg font-semibold tracking-tight">{section.heading}</h2>

@@ -30,12 +30,12 @@ export default defineConfig({
   integrations: [svelte(), mdx(), sitemap()],
 
   markdown: {
-    // Dual Shiki themes: code blocks follow the light/dark toggle. The
-    // `--shiki-*` variables are consumed by `.prose` rules in global.css;
-    // `defaultColor: false` keeps Shiki from inlining one theme's colors.
+    // Dual Shiki themes: code blocks follow the light/dark toggle. Light is
+    // inlined as the default color; the dark palette is applied by the
+    // `.dark .astro-code` rules in src/styles/prose.css.
     shikiConfig: {
-      themes: { light: "github-light", dark: "github-dark" },
-      defaultColor: false,
+      themes: { light: "github-light-high-contrast", dark: "github-dark-high-contrast" },
+      defaultColor: "light",
       wrap: true,
     },
   },

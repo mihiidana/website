@@ -1,16 +1,17 @@
 ---
 /**
- * Blog index: every published post, newest first. Drafts are filtered by
+ * Writing archive: every published post, newest first. Drafts are filtered by
  * `publishedPosts()` and never appear in the production build.
  */
 import { getCollection } from "astro:content";
 
+import PostList from "@/components/blog/post-list.astro";
 import Layout from "@/components/layouts/Layout.astro";
-import { displayDate, isoDate, postPath, publishedPosts } from "@/lib/blog";
+import { publishedPosts } from "@/lib/blog";
 import { site } from "@/lib/site";
 
 const posts = publishedPosts(await getCollection("blog"));
-const copy = site.blog;
+const copy = site.writing;
 ---
 
 <Layout title={copy.title} description={copy.description}>
@@ -22,28 +23,8 @@ const copy = site.blog;
   {posts.length === 0 ? (
     <p class="mt-12 max-w-xl border-t pt-6 text-pretty text-muted-foreground">{copy.empty}</p>
   ) : (
-    <ol class="mt-12 flex flex-col divide-y border-t">
-      {posts.map((post) => (
-        <li class="py-6">
-          <article>
-            <time
-              datetime={isoDate(post.data.pubDate)}
-              class="font-mono text-xs text-muted-foreground"
-            >
-              {displayDate(post.data.pubDate)}
-            </time>
-            <h2 class="mt-1 text-xl font-semibold tracking-tight text-balance">
-              <a
-                href={postPath(post.id)}
-                class="underline-offset-4 transition-colors hover:text-muted-foreground focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-              >
-                {post.data.title}
-              </a>
-            </h2>
-            <p class="mt-1 max-w-xl text-pretty text-muted-foreground">{post.data.description}</p>
-          </article>
-        </li>
-      ))}
-    </ol>
+    <div class="mt-12">
+      <PostList posts={posts} />
+    </div>
   )}
 </Layout>
