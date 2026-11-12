@@ -76,10 +76,12 @@ for (const path of PAGES) {
       await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#ffffff");
 
       // The bundled theme toggle must run.
+      await page.waitForSelector('astro-island[component-url*="mode-toggle"]:not([ssr])');
       await page.getByRole("button", { name: "Toggle color theme" }).click();
       await expect(page.locator("html")).toHaveClass(/dark/);
 
       // Exercise the Bits UI slider island under CSP.
+      await page.waitForSelector('astro-island[component-url*="music-player"]:not([ssr])');
       const slider = page.getByRole("slider", { name: /Volume for/ });
       await expect(slider).toBeVisible();
       await slider.focus();
