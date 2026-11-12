@@ -30,3 +30,7 @@ pnpm-debug.log*
 
 .playwright*
 .impeccable/
+
+# playwright test artifacts
+test-results/
+playwright-report/

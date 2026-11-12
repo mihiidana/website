@@ -1,0 +1,5 @@
+# Cloudflare Workers static assets pick this up and apply the headers.
+# https://developers.cloudflare.com/workers/configuration/headers/
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
