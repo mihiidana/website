@@ -5,7 +5,9 @@ import "@/styles/global.css";
 import Container from "@/components/layouts/container.astro";
 import SiteFooter from "@/components/layouts/footer.astro";
 import SiteHeader from "@/components/layouts/header.astro";
+import PageHead from "@/components/seo/head.astro";
 import { site } from "@/lib/site";
+import { THEME_COLORS, THEME_STORAGE_KEY } from "@/lib/theme";
 
 interface Props {
   description?: string;
@@ -13,6 +15,37 @@ interface Props {
 }
 
 const { description = site.description, title = site.name } = Astro.props;
+
+// Pre-paint theme bootstrap: applies the persisted (or default dark) theme
+// before first render. It must stay inline, so constants are interpolated
+// from `lib/theme.ts` at build time — the toggle and the bootstrap share one
+// source of truth. Bundled scripts are CSP-hashed by Astro; this one
+// registers its own hash below.
+const themeBootstrap = `
+(() => {
+  const root = document.documentElement;
+  const storageKey = ${JSON.stringify(THEME_STORAGE_KEY)};
+  const themeColors = ${JSON.stringify(THEME_COLORS)};
+  let theme = "dark";
+  try {
+    const stored = localStorage.getItem(storageKey);
+    if (stored === "light" || stored === "dark") theme = stored;
+  } catch {
+    // Storage can be blocked; the dark default still applies.
+  }
+  root.classList.toggle("dark", theme === "dark");
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute("content", themeColors[theme]);
+})();
+`;
+
+const bootstrapDigest = await crypto.subtle.digest(
+  "SHA-256",
+  new TextEncoder().encode(themeBootstrap),
+);
+const bootstrapHash = btoa(String.fromCharCode(...new Uint8Array(bootstrapDigest)));
+Astro.csp?.insertScriptHash(`sha256-${bootstrapHash}`);
 ---
 
 <!doctype html>
@@ -26,27 +59,10 @@ const { description = site.description, title = site.name } = Astro.props;
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
-    <meta name="theme-color" content="#0a0a0a">
+    <meta name="theme-color" content={THEME_COLORS.dark}>
     <meta name="generator" content={Astro.generator}>
-    <title>{title}</title>
-    <script is:inline>
-    (() => {
-      const root = document.documentElement;
-      let theme = "dark";
-
-      try {
-        const stored = localStorage.getItem("theme");
-        if (stored === "light" || stored === "dark") theme = stored;
-      } catch {
-        // Storage can be blocked; the dark default still applies.
-      }
-
-      root.classList.toggle("dark", theme === "dark");
-      document
-        .querySelector('meta[name="theme-color"]')
-        ?.setAttribute("content", theme === "dark" ? "#0a0a0a" : "#ffffff");
-    })();
-    </script>
+    <PageHead title={title} description={description} />
+    <script is:inline set:html={themeBootstrap} />
     <Font cssVariable="--font-satoshi" preload />
     <Font cssVariable="--font-caveat" preload />
     <slot name="head" />

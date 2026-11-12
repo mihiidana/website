@@ -33,9 +33,10 @@ export default function MusicPlayer({ class: className, track, artwork }: MusicP
     }
   };
 
-  const changeVolume = ([value]: number[]) => {
-    setVolume(value);
-    setMuted(value === 0);
+  const changeVolume = (value: number | readonly number[]) => {
+    const level = typeof value === "number" ? value : value[0];
+    setVolume(level);
+    setMuted(level === 0);
   };
 
   const toggleMute = () => {

@@ -53,6 +53,16 @@
   },
   "overrides": [
     {
+      "includes": ["astro.config.mjs", "playwright.config.ts", "vitest.config.ts", "tests/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": "off"
+          }
+        }
+      }
+    },
+    {
       "includes": ["**/*.astro"],
       "linter": {
         "rules": {

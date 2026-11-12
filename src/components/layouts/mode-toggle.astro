@@ -23,32 +23,30 @@ import { cn } from "@/lib/utils";
 </button>
 
 <script>
-const THEME_STORAGE_KEY = "theme";
+import { THEME_COLORS, THEME_STORAGE_KEY, type Theme } from "@/lib/theme";
 
 type ViewTransitionDocument = Document & {
   startViewTransition?: (update: () => void) => { ready: Promise<void> };
 };
 
-function applyTheme(isDark: boolean) {
-  document.documentElement.classList.toggle("dark", isDark);
-  document
-    .querySelector('meta[name="theme-color"]')
-    ?.setAttribute("content", isDark ? "#0a0a0a" : "#ffffff");
+function applyTheme(theme: Theme) {
+  document.documentElement.classList.toggle("dark", theme === "dark");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", THEME_COLORS[theme]);
 
   try {
-    localStorage.setItem(THEME_STORAGE_KEY, isDark ? "dark" : "light");
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
   } catch {
     // Storage can be blocked; the theme still changes for this page view.
   }
 }
 
 function toggleTheme(event: MouseEvent) {
-  const isDark = !document.documentElement.classList.contains("dark");
+  const nextTheme: Theme = document.documentElement.classList.contains("dark") ? "light" : "dark";
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const doc = document as ViewTransitionDocument;
 
   if (!doc.startViewTransition || reduceMotion) {
-    applyTheme(isDark);
+    applyTheme(nextTheme);
     return;
   }
 
@@ -61,7 +59,7 @@ function toggleTheme(event: MouseEvent) {
     Math.max(y, window.innerHeight - y),
   );
 
-  const transition = doc.startViewTransition(() => applyTheme(isDark));
+  const transition = doc.startViewTransition(() => applyTheme(nextTheme));
 
   void transition.ready
     .then(() => {

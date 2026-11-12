@@ -60,7 +60,7 @@ export type SiteConfig = {
   pages: Readonly<Record<string, SitePage>>;
 };
 
-export const site = {
+export const site: SiteConfig = {
   name: "mihidana",
   wordmark: "m",
   description: "Personal website of mihidana.",
@@ -126,4 +126,6 @@ export const site = {
       },
     },
   },
-} as const satisfies SiteConfig;
+  // Typed as SiteConfig (not `as const`): the annotation gives empty arrays
+  // like `sections: []` the declared element type instead of `never[]`.
+};
