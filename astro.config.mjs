@@ -46,10 +46,24 @@ export default defineConfig({
   integrations: [react()],
 
   security: {
-    // Hash-based CSP emitted as a <meta> tag on every page. Bundled scripts
-    // and styles are hashed automatically; the one is:inline script (the
-    // theme bootstrap in Layout.astro) registers its hash at render time.
-    // Never add 'unsafe-inline' to script-src.
+    // Hash-based CSP emitted as a <meta> tag on every page. Policy intent:
+    //
+    // - Scripts: 'self' plus per-page hashes. Astro hashes the scripts it
+    //   bundles; the inline theme bootstrap registers its hash in Layout.astro
+    //   and Base UI's slider prehydration script is hashed from the package
+    //   (see above). No 'unsafe-inline', ever.
+    // - Styles: 'self' plus hashes for <style> elements, and 'unsafe-inline'
+    //   scoped to style ATTRIBUTES only — Base UI positions elements with
+    //   style="" (e.g. the slider thumb).
+    // - Everything the site actually loads is same-origin: scripts, styles,
+    //   fonts (Astro adds font-src 'self' itself), images, and the audio file.
+    // - default-src 'self' is the fallback for any category not listed below
+    //   (manifest, worker, prefetch, ...). Every directive below still
+    //   overrides it. form-action 'self' blocks cross-origin form posts; the
+    //   site has no forms, so it costs nothing.
+    // - frame-ancestors is NOT enforced from a meta tag. Clickjacking
+    //   protection comes from X-Frame-Options: DENY in public/_headers,
+    //   applied by Cloudflare Workers.
     csp: {
       scriptDirective: {
         resources: ["'self'"],
@@ -65,7 +79,16 @@ export default defineConfig({
           { resource: "'unsafe-inline'", kind: "attribute" },
         ],
       },
-      directives: ["object-src 'none'", "base-uri 'self'"],
+      directives: [
+        "default-src 'self'",
+        "form-action 'self'",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "img-src 'self' data:",
+        "media-src 'self'",
+        "connect-src 'self'",
+        "frame-src 'none'",
+      ],
     },
   },
 
