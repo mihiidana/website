@@ -256,6 +256,32 @@ up, abort stale requests, and never delay the feedback the user is directly
 manipulating. The interactive example above is deliberately small, but it
 exercises each of those edges.
 
+## Images inside MDX
+
+MDX keeps ordinary Markdown image syntax, so nothing below needs an import
+when the default output is enough:
+
+![A remote image optimized at build time](https://i.imgur.com/6Z4ZQ4M.jpg)
+
+For control over the size or the output format, use Astro's components. They
+render to plain HTML on the server — no island, no hydration:
+
+import { Image, Picture } from "astro:assets";
+import diagram from "@/assets/blog/static-build-strip.png";
+
+<Image src={diagram} alt="A diagram imported explicitly and rendered with a fixed width" width={480} />
+
+<Picture
+  src={diagram}
+  formats={["avif", "webp"]}
+  alt="The same diagram offered as AVIF with a WebP fallback"
+/>
+
+The difference between the two: `Image` picks one format and lets you set
+dimensions, while `Picture` emits a `<picture>` element with one `<source>`
+per requested format and the original as the fallback. Reach for `Picture`
+when the savings matter, and keep the `alt` text just as meaningful either way.
+
 ## References
 
 - [MDN: `setTimeout()`](https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout)

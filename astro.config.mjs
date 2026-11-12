@@ -7,7 +7,9 @@ import svelte from "@astrojs/svelte";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, fontProviders } from "astro/config";
 
+import { articleImageSizesPlugin } from "./src/lib/article-image-sizes";
 import { headingPermalinksPlugin } from "./src/lib/heading-permalinks";
+import { remoteImages } from "./src/lib/remote-images";
 import { site } from "./src/lib/site";
 
 // https://astro.build/config
@@ -21,15 +23,43 @@ export default defineConfig({
   site: site.url,
 
   image: {
-    // Only these hosts may be downloaded and optimized at build time.
-    domains: ["img.youtube.com"],
+    // Any publicly accessible HTTPS image URL may be optimized at build time.
+    // An empty pattern authorizes every host: `matchHostname()` returns true
+    // when `hostname` is omitted, so `protocol` is the only constraint and the
+    // hostname never has to be listed. That is deliberate — a post may use
+    // ImgBB, Reddit, Imgur, a personal CDN, or something that does not exist
+    // yet, without editing this file. HTTP stays unauthorized; redirects are
+    // validated against the same patterns. See docs/writing.md → Images.
+    remotePatterns: [{ protocol: "https" }],
+
+    // The hostname allowlist this replaces (`domains`) is gone: it only ever
+    // permitted one provider. Everything the site ships is now processed by
+    // Astro's own sharp service, locally or remotely.
+    //
+    // `constrained` makes every processed image — including plain Markdown
+    // `![]()` and remote ones — scale down to its container but never past its
+    // intrinsic width, and emits `srcset`, `sizes`, and `data-astro-image`.
+    layout: "constrained",
+
+    // Enable Astro's responsive styles. They ship inside `@layer astro.images`,
+    // a layer declared after Tailwind's, so `@tailwindcss/typography` rules on
+    // `.prose img` still win. src/styles/prose.css only adds what Astro cannot
+    // know: prose margin on `<picture>`.
+    responsiveStyles: true,
+
+    // Article bodies are never wider than the shared `max-w-3xl` container, so
+    // Astro's default ladder (up to 6016px) would emit variants no reader can
+    // display. These cover 1x and 2x at mobile through desktop widths.
+    breakpoints: [320, 480, 640, 768, 960, 1280],
   },
 
   devToolbar: {
     enabled: false,
   },
 
-  integrations: [svelte(), mdx(), sitemap()],
+  // `remoteImages()` must run before `mdx()` resolves the Markdown processor
+  // at `astro:config:done`, so it is listed first. See src/lib/remote-images.ts.
+  integrations: [remoteImages(), svelte(), mdx(), sitemap()],
 
   markdown: {
     // Astro 7's default Markdown processor is Sätteri; naming it here is what
@@ -38,7 +68,7 @@ export default defineConfig({
     // decorates the IDs it has already assigned. `.md` and `.mdx` share this
     // processor, so both formats get identical anchors.
     processor: satteri({
-      hastPlugins: [satteriHeadingIdsPlugin(), headingPermalinksPlugin],
+      hastPlugins: [satteriHeadingIdsPlugin(), headingPermalinksPlugin, articleImageSizesPlugin],
     }),
     // Dual Shiki themes: code blocks follow the light/dark toggle. Light is
     // inlined as the default color; the dark palette is applied by the

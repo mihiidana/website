@@ -262,6 +262,26 @@ pages to generate and the build produces nothing for that URL.
 happens in the browser or behind a separate service. That is a design decision,
 not a limitation of the build.
 
+## Images are build-time work too
+
+The same rule applies to images, and it is where a static site most often
+regresses: a Markdown image is easy to write, so it is easy to ship the wrong
+one.
+
+![A wide strip of the pipeline, from a local source file to generated variants](../../assets/blog/static-build-strip.png)
+
+That image is one file in `src/assets/blog/`. Nothing downloaded it, resized
+it, or inlined it: `![]()` pointed at an importable path, and the build produced
+the variants, dimensions, and `srcset` itself. A different post keeps its image
+next to the post instead, with a path relative to the article:
+
+![The same pipeline diagram, resolved relative to this article](./static-first-astro/pipeline.png)
+
+Both forms go through Astro's image service. Local images are hashed and
+emitted under `/_astro/`, so they can be cached immutably, and remote ones are
+fetched once during the build — never at request time, and never from
+`public/`, which is copied verbatim and stays unoptimized.
+
 ## The model in one paragraph
 
 Astro runs your frontmatter at build time, writes HTML, and stops. Components

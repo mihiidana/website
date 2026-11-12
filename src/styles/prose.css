@@ -44,6 +44,26 @@
   border-radius: 0;
 }
 
+/*
+ * Images. Astro's `layout: "constrained"` emits width, height, srcset, sizes,
+ * and `data-astro-image` for every processed image — Markdown or MDX, local or
+ * remote — and its own styles ship inside `@layer astro.images`, declared after
+ * Tailwind's layers, so the typography plugin's `.prose img` rules still win.
+ * Only what Astro cannot know is added here.
+ */
+
+/* The typography plugin styles `img` and `picture > img` but never `picture`
+   itself, and `<Picture />` renders one. Without this it stays inline. */
+.prose :where(picture) {
+  display: block;
+}
+
+/* Square, shadowless, like every other surface on the site. */
+.prose :where(img) {
+  border-radius: 0;
+  box-shadow: none;
+}
+
 /* The site header is sticky (h-16), so a fragment jump must clear it. */
 .prose :where(h2, h3, h4, h5, h6) {
   scroll-margin-top: 5rem;

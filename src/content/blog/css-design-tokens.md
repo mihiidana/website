@@ -230,6 +230,27 @@ The other real trade-off is tooling. A token layer is only as good as its
 enforcement. If nothing prevents a hardcoded color, one will appear, then
 another, and the system slowly stops describing the design.
 
+## External images are build input too
+
+Tokens are about consistency, and images are where consistency quietly breaks:
+a screenshot pasted from an image host ships at whatever size the host serves.
+
+![A palette reference hosted on ImgBB](https://i.ibb.co/fVx2WyFx/accessories.png)
+
+That URL is an ordinary remote image on an ordinary third-party host. Nothing
+in the repository names ImgBB, and nothing had to change for it: an
+`https:` image address in Markdown is authorized to be downloaded and
+re-encoded during the build, then served from the site's own immutable asset
+path. The same is true of a Reddit-hosted image:
+
+![A screenshot uploaded to Reddit](https://i.redd.it/299vzb1ufbyh1.png)
+
+Two habits keep this honest. Use the image address, not the page that displays
+it — `https://i.redd.it/…` is an image; `https://www.reddit.com/r/…/comments/…`
+is a webpage and will fail the build, loudly, because it is not an image. And
+keep the asset in the repository when it is the source of truth: a remote image
+is fetched at build time, so it is only as reliable as the host.
+
 ## Conclusion
 
 Keep two layers, primitives and semantics. Let components see only the second.

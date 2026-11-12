@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 interface Props {
   class?: string;
   track: SiteTrack;
-  /** Pre-optimized artwork URL (build-time processed); falls back to track.artwork. */
+  /** Build-time optimized artwork URL, derived from `artwork`. */
   artwork?: string;
 }
 
@@ -59,6 +59,19 @@ function toggleMute() {
 const VOLUME_PER_WHEEL_PIXEL = 0.0005;
 const MAX_WHEEL_VOLUME_STEP = 0.1;
 
+/**
+ * Lowest level the wheel will set, and highest it will set — 1.
+ *
+ * The wheel deliberately never reaches 0 and never engages mute. A silent or
+ * muted player leaves the browser nothing to scroll, so the following wheel
+ * event can arrive non-cancelable, and this handler must refuse those. Wheeling
+ * to true silence would therefore strand the player with no way back except the
+ * slider. Both remain reachable: the slider goes to 0, and the mute button
+ * mutes. The wheel only borrows the same volume state, clamped to a range it
+ * can always leave.
+ */
+const MIN_WHEEL_VOLUME = 0.01;
+
 $effect(() => {
   const audio = audioEl;
   if (!audio) return;
@@ -71,6 +84,12 @@ $effect(() => {
 // so the listener is registered non-passive and the default scroll is
 // cancelled synchronously. It is scoped to the player element and removed by
 // the cleanup `on()` returns when the component is destroyed.
+//
+// Ordering matters more than it looks. Every early return below happens BEFORE
+// `preventDefault()`, so a gesture this widget refuses still scrolls the page
+// normally — the widget never swallows input it does not use. And because the
+// volume is only written after `preventDefault()` succeeds, the volume can
+// never change while the page scrolls underneath it.
 $effect(() => {
   const card = cardEl;
   if (!card) return;
@@ -94,24 +113,29 @@ $effect(() => {
       const dy = pixels(event);
       if (dy === 0) return;
 
-      // The widget owns the vertical gesture wherever it is handled, so the
-      // document must not scroll underneath it.
-      if (event.cancelable) event.preventDefault();
-
       // Already silent: scrolling further down changes nothing, and scrolling
       // up is the gesture that brings the sound back.
       if (muted && dy > 0) return;
 
+      // Some browsers emit wheel sequences in which only the first event is
+      // cancelable (https://developer.mozilla.org/en-US/docs/Web/API/Element/wheel_event).
+      // `preventDefault()` on a non-cancelable event is a no-op, so the page
+      // would scroll while the volume followed it. Refuse the event instead:
+      // no page scroll gets cancelled, so no volume change is allowed either.
+      if (!event.cancelable) return;
+
+      // From here the widget owns the vertical gesture: cancel the scroll.
+      event.preventDefault();
+
+      // Only now does the volume change, and it stays inside its range.
       const step = Math.max(
         -MAX_WHEEL_VOLUME_STEP,
         Math.min(MAX_WHEEL_VOLUME_STEP, dy * VOLUME_PER_WHEEL_PIXEL),
       );
-      const next = Math.min(1, Math.max(0, volume - step));
 
-      volume = next;
-      // Silence at the floor, and scrolling up is an intentional unmute.
-      if (next === 0) muted = true;
-      else if (dy < 0) muted = false;
+      volume = Math.min(1, Math.max(MIN_WHEEL_VOLUME, volume - step));
+      // Scrolling up is an intentional unmute, matching the slider.
+      if (dy < 0) muted = false;
     },
     { passive: false },
   );

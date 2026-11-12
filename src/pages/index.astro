@@ -15,11 +15,20 @@ import { site } from "@/lib/site";
 const page = site.pages.home;
 const { widgets, resources, techStack } = page;
 
-// Widget displays the artwork at ~320px; download once at build time and
-// convert to webp instead of hotlinking YouTube's 1280px jpeg.
+// Widget displays the artwork at ~320px, so the build converts the 1280px
+// source once to a square webp. The artwork lives in `src/assets/` as a normal
+// imported image, which is why no remote host needs authorizing for it.
 const track = widgets?.music;
 const optimizedArtwork = track
-  ? (await getImage({ src: track.artwork, width: 320, height: 320, format: "webp" })).src
+  ? (
+      await getImage({
+        src: (await import("@/assets/music-artwork.jpg")).default,
+        width: 320,
+        height: 320,
+        fit: "cover",
+        format: "webp",
+      })
+    ).src
   : undefined;
 
 // Newest four published posts, sharing the archive's filter and order. The

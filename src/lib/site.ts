@@ -21,6 +21,7 @@ export type SiteTrack = {
   title: string;
   artist: string;
   album: string;
+  /** File name of the cover image in `src/assets/`, processed at build time. */
   artwork: string;
   audio: string;
   href: string;
@@ -98,7 +99,10 @@ export const site: SiteConfig = {
           title: "One Trick Phony",
           artist: "Sasha Alex Sloan",
           album: "I Blame The World",
-          artwork: "https://img.youtube.com/vi/kG9qlxLMa0o/maxresdefault.jpg",
+          // Sourced from the track's YouTube thumbnail, stored in `src/assets/`
+          // so Astro's image service processes it like any local image — the
+          // site no longer needs a remote allowlist entry to build.
+          artwork: "music-artwork.jpg",
           audio: "/audio/One_Trick_Phony.mp3",
           href: "https://music.youtube.com/watch?v=kG9qlxLMa0o",
         },

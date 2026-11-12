@@ -91,19 +91,154 @@ day the post first becomes public. Update `updatedDate` when you make a
 substantive change; leave it out for typo fixes. Both dates feed the article
 header, `<meta property="article:*">`, and `BlogPosting` JSON-LD.
 
-## Links and images
+## Links
 
 - Internal links are root-relative: `[the archive](/blog/)`, `[a post](/blog/hello-world/)`.
   Trailing slashes match the built output.
 - External links are plain absolute URLs; the site does not add `target`
   attributes for you, and it should not.
-- Post-local images go beside the post and are referenced relatively:
-  `src/content/blog/hello-world/diagram.png` → `![A diagram](./diagram.png)`.
-  Astro optimizes and hashes them at build time.
-- Images used across posts live in `src/assets/` and are imported in MDX, or
-  copied to `public/` if they must keep a stable, unprocessed URL.
 
-Always write alt text. It is the only description a screen reader gets.
+## Images
+
+Images are optimized at build time by Astro's own image service. Ordinary
+Markdown syntax is all you need — no imports, no resizing, no downloading files
+by hand. There is no domain allowlist to maintain.
+
+### Where images live
+
+Put images inside `src/` so Astro can process them:
+
+```text
+src/
+├── assets/
+│   └── blog/
+│       └── architecture.png        ← shared across posts
+└── content/
+    └── blog/
+        ├── my-article.md
+        └── my-article/
+            └── diagram.png         ← belongs to one post
+```
+
+Two working styles, both fine:
+
+```markdown
+![A diagram that belongs to this post](./my-article/diagram.png)
+
+![An architecture diagram shared between posts](../../assets/blog/architecture.png)
+```
+
+Relative paths resolve from the file that contains them. A local image is
+hashed and emitted under `/_astro/`, so it can be cached forever.
+
+**Do not use `public/` for article images.** Files there are copied verbatim and
+served unoptimized: no resizing, no modern formats, no hashed filenames. It is
+the right place for the favicons and `site.webmanifest`, and the wrong place for
+anything a post displays.
+
+### Remote images: paste the URL
+
+Any public HTTPS image address works, from any host:
+
+```markdown
+![An illustration hosted on ImgBB](https://i.ibb.co/example/illustration.webp)
+
+![An image hosted on Reddit](https://i.redd.it/example-image.jpg)
+
+![An illustration on Imgur](https://i.imgur.com/example.jpg)
+
+![An image from another host](https://images.example.com/example.png)
+```
+
+Astro downloads the file once during the build, converts and resizes it, and
+ships it from `/_astro/` like a local image. The visitor's browser never
+contacts the original host.
+
+This works because `astro.config.mjs` authorizes `https:` in general:
+
+```ts
+image: {
+  remotePatterns: [{ protocol: "https" }],
+}
+```
+
+That is deliberate. Do **not** add per-provider entries such as
+`hostname: "i.ibb.co"`; a new image host must never require a config change. HTTP
+is not authorized.
+
+**Use the image address, not the page that shows it.** This is the one mistake
+that bites:
+
+| You want       | Use                                                | Not                                               |
+| -------------- | -------------------------------------------------- | ------------------------------------------------- |
+| A Reddit image | `https://i.redd.it/abc123.jpg`                     | `https://www.reddit.com/r/x/comments/…` (webpage) |
+| An ImgBB image | the _direct_ / _image_ link (`https://i.ibb.co/…`) | the ImgBB gallery page (`https://ibb.co/…`)       |
+| An Imgur image | `https://i.imgur.com/abc123.jpg`                   | `https://imgur.com/gallery/abc123` (webpage)      |
+
+A webpage URL is HTML, not an image, so the build fails with an error naming the
+URL. That failure is intentional: the alternative is an `<img>` that silently
+shows nothing.
+
+Keep query strings on URLs that need them (`?token=…`, `?width=…`). They are
+preserved exactly.
+
+### What can go wrong with a remote image
+
+Remote images are fetched by CI, so they must be publicly readable without a
+login, cookie, or referer. A host may block automated requests, rate-limit, or
+delete the file. When that happens the build fails and names the URL — it never
+quietly ships an unoptimized image, because the production security policy only
+allows same-origin images (`img-src 'self' data:`), so an unprocessed remote
+image would not display at all.
+
+If an image matters to the article, commit it under `src/` instead. A remote URL
+is a convenience, not a backup.
+
+### Responsive output
+
+Every processed image gets `width`, `height`, `srcset`, `sizes`, and
+`data-astro-image="constrained"`. Dimensions prevent layout shift; `srcset`
+lets the browser pick a variant that fits the screen. The configuration is
+global (`image.layout: "constrained"`), so Markdown images get it automatically.
+
+`sizes` is set by `src/lib/article-image-sizes.ts` to the article column width,
+not the image's intrinsic width. Without that, a 1920px screenshot would claim
+`sizes="1920px"` in a 720px column and every visitor would download the largest
+variant.
+
+### MDX: `<Image />` and `<Picture />`
+
+Markdown syntax works in `.mdx` too, and is optimized the same way. Reach for
+Astro's components when you want explicit control:
+
+```mdx
+import { Image, Picture } from "astro:assets";
+import diagram from "@/assets/blog/architecture.png";
+
+<Image src={diagram} alt="The build pipeline" width={480} />
+
+<Picture src={diagram} formats={["avif", "webp"]} alt="The build pipeline" />
+```
+
+- `<Image />` — one output format and an exact size.
+- `<Picture />` — one `<source>` per requested format, with the original as
+  fallback. Use it when the format savings matter (large photos, not line art).
+
+Remote URLs work in both; pass the URL directly (`<Image src="https://…" … />`)
+and the same HTTPS rule applies. Never write a raw `<img>` tag for an image you
+expect to be optimized: raw HTML bypasses the pipeline entirely.
+
+### Alt text
+
+Always write it. It is the only description a screen reader gets, and it is what
+displays if an image fails to load.
+
+- Describe the purpose, not the pixels: "Request flow from browser to worker",
+  not "diagram.png".
+- Decorative image? That is rare in an article. If it truly carries no meaning,
+  an empty `alt=""` is correct — not a missing one.
+- Do not start with "Image of" or "Screenshot of"; screen readers announce the
+  role already.
 
 ## Markdown conventions
 
