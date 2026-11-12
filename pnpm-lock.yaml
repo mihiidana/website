@@ -166,6 +166,9 @@ importers:
 
   .:
     dependencies:
+      '@astrojs/markdown-satteri':
+        specifier: 0.4.7
+        version: 0.4.7
       '@astrojs/mdx':
         specifier: ^8.1.5
         version: 8.1.5(@astrojs/markdown-satteri@0.4.7)(astro@7.4.8(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
@@ -190,6 +193,9 @@ importers:
       cn:
         specifier: ^0.5.2
         version: 0.5.2
+      satteri:
+        specifier: 0.11.7
+        version: 0.11.7
       svelte:
         specifier: ^5.57.3
         version: 5.57.3

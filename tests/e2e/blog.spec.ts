@@ -77,10 +77,13 @@ for (const post of published) {
     await expect(page.locator("h1")).toHaveText(post.title);
     await expect(page.locator("main#main article")).toHaveCount(1);
     await expect(page.locator("main#main article header time").first()).toBeVisible();
-    // A link back to the listing, scoped to the article's breadcrumb.
-    await expect(
-      page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: /Writing/ }),
-    ).toHaveAttribute("href", "/blog/");
+
+    // Articles start with the title: no breadcrumb, no back link, and no
+    // other navigation inside the article.
+    await expect(page.locator("main#main article nav")).toHaveCount(0);
+    await expect(page.locator('main#main article a[href="/blog/"]')).toHaveCount(0);
+    const headerText = await page.locator("main#main article header").textContent();
+    expect(headerText?.trimStart().startsWith(post.title)).toBe(true);
 
     // Canonical URLs are absolute and built from `site` in astro.config.mjs,
     // not from the preview host (same contract as tests/e2e/seo.spec.ts).
@@ -277,5 +280,134 @@ test("every page advertises the RSS feed", async ({ page }) => {
       "href",
       "/rss.xml",
     );
+  }
+});
+
+test("content headings carry permalinks to their own ids", async ({ page }) => {
+  for (const post of published) {
+    await page.goto(`${CONTENT_PREFIX}${post.id}/`);
+
+    const headings = page.locator(".prose :is(h2, h3, h4, h5, h6)");
+    const count = await headings.count();
+    expect(count).toBeGreaterThan(0);
+
+    const data = await headings.evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const anchor = node.querySelector("a.heading-anchor");
+        return {
+          id: node.id,
+          tag: node.tagName.toLowerCase(),
+          href: anchor?.getAttribute("href") ?? null,
+          label: anchor?.getAttribute("aria-label") ?? null,
+          text: (node.textContent ?? "").trim(),
+        };
+      }),
+    );
+
+    for (const heading of data) {
+      // Astro assigns the id; the plugin only links to it.
+      expect(heading.id).not.toBe("");
+      expect(heading.tag).not.toBe("h1");
+      expect(heading.href).toBe(`#${heading.id}`);
+      expect(heading.label).toContain(heading.text);
+    }
+
+    // Exactly one permalink per heading, and the page has a single h1.
+    expect(await page.locator(".prose a.heading-anchor").count()).toBe(count);
+    expect(await page.locator("h1").count()).toBe(1);
+    expect(await page.locator(".prose h1").count()).toBe(0);
+  }
+});
+
+test("a heading permalink navigates to its section", async ({ page }) => {
+  const post = published.find((entry) => entry.id === "css-design-tokens") ?? published[0];
+  test.skip(!post, "No published post to check");
+  await page.goto(`${CONTENT_PREFIX}${post.id}/`);
+
+  const anchor = page.locator(".prose a.heading-anchor").first();
+  const target = (await anchor.getAttribute("href")) ?? "";
+  expect(target.startsWith("#")).toBe(true);
+
+  await anchor.click();
+  expect(new URL(page.url()).hash).toBe(target);
+
+  const id = target.slice(1);
+  const heading = page.locator(`.prose [id="${id}"]`);
+  await expect(heading).toBeInViewport();
+});
+
+test("heading permalinks are reachable by keyboard and stay out of the heading text", async ({
+  page,
+}) => {
+  const post = published[0];
+  test.skip(!post, "No published post to check");
+  await page.goto(`${CONTENT_PREFIX}${post.id}/`);
+
+  const anchor = page.locator(".prose a.heading-anchor").first();
+  await expect(anchor).toHaveAttribute("aria-label", /^Permalink to /);
+
+  // Tab order reaches the anchor (it is a real link, not a click target on the
+  // heading), and focus is visible.
+  await page.locator("main#main").focus();
+  let reached = false;
+  for (let step = 0; step < 200 && !reached; step += 1) {
+    await page.keyboard.press("Tab");
+    reached = await page.evaluate(
+      () => document.activeElement?.classList.contains("heading-anchor") ?? false,
+    );
+  }
+  expect(reached).toBe(true);
+
+  // The anchor fades in on focus, so poll past the transition.
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const active = document.activeElement as HTMLElement;
+        return getComputedStyle(active).opacity;
+      }),
+    )
+    .toBe("1");
+});
+
+test("the permalink glyph is CSS, so it is absent from the accessible text", async ({ page }) => {
+  const post = published[0];
+  test.skip(!post, "No published post to check");
+  await page.goto(`${CONTENT_PREFIX}${post.id}/`);
+
+  const heading = page.locator(".prose h2").first();
+  const text = await heading.evaluate((node) => {
+    const anchor = node.querySelector("a.heading-anchor");
+    return { full: node.textContent ?? "", anchor: anchor?.textContent ?? null };
+  });
+  expect(text.anchor).toBe("");
+  expect(text.full).not.toContain("#");
+});
+
+test("the archive uses one h1 and h2 entries", async ({ page }) => {
+  await page.goto(CONTENT_PREFIX);
+  expect(await page.locator("main#main h1").count()).toBe(1);
+  await expect(page.locator("main#main h1")).toHaveText(site.writing.title);
+
+  if (published.length === 0) return;
+  const levels = await page
+    .locator("main#main ol :is(h1, h2, h3)")
+    .evaluateAll((nodes) => nodes.map((node) => node.tagName));
+  expect(levels).toEqual(published.map(() => "H2"));
+});
+
+test("an article's heading outline starts at h1 and descends", async ({ page }) => {
+  const post = published[0];
+  test.skip(!post, "No published post to check");
+  await page.goto(`${CONTENT_PREFIX}${post.id}/`);
+
+  const levels = await page
+    .locator("main#main :is(h1, h2, h3, h4, h5, h6)")
+    .evaluateAll((nodes) => nodes.map((node) => Number(node.tagName.slice(1))));
+
+  expect(levels[0]).toBe(1);
+  expect(levels.filter((level) => level === 1)).toHaveLength(1);
+  // No heading skips a level on the way down (h1 → h2 → h3, never h1 → h3).
+  for (let index = 1; index < levels.length; index += 1) {
+    expect(levels[index] - levels[index - 1]).toBeLessThanOrEqual(1);
   }
 });

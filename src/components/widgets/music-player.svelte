@@ -1,5 +1,6 @@
 <script lang="ts">
 import { Music2, Pause, Play, Volume2, VolumeX } from "@lucide/svelte";
+import { on } from "svelte/events";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -50,6 +51,14 @@ function toggleMute() {
   muted = false;
 }
 
+/**
+ * Volume change per wheel pixel. A mouse notch (deltaY ~100) moves the level
+ * by 0.05, and the per-event clamp keeps a page-mode delta from jumping the
+ * whole range at once.
+ */
+const VOLUME_PER_WHEEL_PIXEL = 0.0005;
+const MAX_WHEEL_VOLUME_STEP = 0.1;
+
 $effect(() => {
   const audio = audioEl;
   if (!audio) return;
@@ -58,8 +67,10 @@ $effect(() => {
   audio.muted = muted;
 });
 
-// Wheel over the widget adjusts volume; the page keeps scrolling normally,
-// so the listener stays passive.
+// Wheel over the widget adjusts volume and must not scroll the page with it,
+// so the listener is registered non-passive and the default scroll is
+// cancelled synchronously. It is scoped to the player element and removed by
+// the cleanup `on()` returns when the component is destroyed.
 $effect(() => {
   const card = cardEl;
   if (!card) return;
@@ -71,18 +82,39 @@ $effect(() => {
     return event.deltaY;
   };
 
-  const onWheel = (event: WheelEvent) => {
-    if (event.ctrlKey) return; // pinch-zoom gesture
-    const dy = pixels(event);
-    if (muted && dy >= 0) return; // already silent, keep the level
+  return on(
+    card,
+    "wheel",
+    (event) => {
+      // Leave pinch-zoom and modified gestures to the browser.
+      if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
+      // Horizontal trackpad gestures are not this widget's business.
+      if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
 
-    const next = Math.min(1, Math.max(0, volume - dy * 0.0005));
-    volume = next;
-    muted = next === 0;
-  };
+      const dy = pixels(event);
+      if (dy === 0) return;
 
-  card.addEventListener("wheel", onWheel, { passive: true });
-  return () => card.removeEventListener("wheel", onWheel);
+      // The widget owns the vertical gesture wherever it is handled, so the
+      // document must not scroll underneath it.
+      if (event.cancelable) event.preventDefault();
+
+      // Already silent: scrolling further down changes nothing, and scrolling
+      // up is the gesture that brings the sound back.
+      if (muted && dy > 0) return;
+
+      const step = Math.max(
+        -MAX_WHEEL_VOLUME_STEP,
+        Math.min(MAX_WHEEL_VOLUME_STEP, dy * VOLUME_PER_WHEEL_PIXEL),
+      );
+      const next = Math.min(1, Math.max(0, volume - step));
+
+      volume = next;
+      // Silence at the floor, and scrolling up is an intentional unmute.
+      if (next === 0) muted = true;
+      else if (dy < 0) muted = false;
+    },
+    { passive: false },
+  );
 });
 </script>
 
@@ -135,7 +167,9 @@ $effect(() => {
     </div>
 
     <div class="min-w-0">
-      <h2 class="truncate font-medium text-foreground">{track.title}</h2>
+      <!-- A widget label, not a document section: keeping it out of the
+           heading outline leaves the page hierarchy to the page. -->
+      <p class="truncate font-medium text-foreground">{track.title}</p>
       <p class="truncate text-sm text-muted-foreground">{track.artist}</p>
       <p class="truncate text-xs text-muted-foreground">{track.album}</p>
     </div>

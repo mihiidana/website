@@ -47,14 +47,6 @@ const canonical = new URL(postPath(post.id), Astro.site).href;
   />
   <article>
     <header class="flex flex-col gap-3 border-b pb-8">
-      <nav aria-label="Breadcrumb" class="font-mono text-xs">
-        <a
-          href="/blog/"
-          class="text-muted-foreground transition-colors hover:text-foreground focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-        >
-          ← Writing
-        </a>
-      </nav>
       <h1 class="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">{title}</h1>
       <p class="text-pretty text-lg text-muted-foreground">{description}</p>
       <p class="flex flex-wrap items-center gap-x-2 font-mono text-xs text-muted-foreground">

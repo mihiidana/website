@@ -36,11 +36,11 @@ Requires Node `>=26.13.0` and pnpm `12.18.0` (`packageManager`).
 │   │                     # article-json-ld.astro (BlogPosting)
 │   ├── content/
 │   │   └── blog/         # posts: .md or .mdx, one collection, path = slug
-│   ├── lib/              # site.ts, blog.ts, theme.ts, utils.ts (cn)
+│   ├── lib/              # site.ts, blog.ts, heading-permalinks.ts, theme.ts, utils.ts
 │   ├── pages/            # file-based routes (index.astro, blog/, rss.xml)
 │   └── styles/           # global.css: Tailwind, tokens, fonts; prose.css: articles
 ├── tests
-│   ├── unit/             # vitest: theme constants, blog helpers, blog schema
+│   ├── unit/             # vitest: theme, blog helpers/schema, heading permalinks
 │   └── e2e/              # Playwright: smoke, a11y, CSP, theme, SEO, widgets,
 │                         # homepage writing, blog, MDX, links
 ├── components.json       # shadcn-svelte config

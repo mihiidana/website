@@ -125,8 +125,48 @@ Always write alt text. It is the only description a screen reader gets.
   (`astro.config.mjs`). The high-contrast palettes are required: the stock
   GitHub themes fail WCAG AA on comments and constants. Both themes render on
   the same `--muted` surface; only token colors switch with the theme.
-- Prefer short paragraphs and sentences. The reading column is about 65
-  characters wide.
+- Prefer short paragraphs and sentences. The article body uses the site's
+  shared `max-w-3xl` container — the same width as the header, footer, and
+  homepage — so there is no narrower inner column to design around.
+
+## Heading permalinks
+
+Every `##`–`######` heading in a post renders with a small `#` link beside it
+that points at the heading's own fragment. The build does this: no JavaScript
+runs to make it work, and the link is a normal `<a>` for keyboard and screen
+reader users.
+
+The pipeline is Sätteri, Astro 7's Rust-based Markdown and MDX processor:
+
+1. `satteriHeadingIdsPlugin()` (Astro's own pass, registered first in
+   `astro.config.mjs`) assigns the `id` and collects the heading metadata.
+2. `headingPermalinksPlugin` (`src/lib/heading-permalinks.ts`) visits the H2–H6
+   elements that now have an `id` and appends `<a href="#id">` with an
+   `aria-label` of `Permalink to <heading text>`.
+
+Both `.md` and `.mdx` go through the same processor, so anchors behave
+identically. The `h1` is the frontmatter title and never gets a permalink. Do
+not add `rehype-slug` or `rehype-autolink-headings`: this project does not run
+a Unified/rehype pipeline.
+
+To link to a section from the same post, use the fragment the anchor itself
+uses:
+
+```markdown
+## Understanding the architecture
+
+See [Understanding the architecture](#understanding-the-architecture) above.
+```
+
+To link from another post or an external site, prefix the article path:
+
+```markdown
+See [how tokens are named](/blog/css-design-tokens/#naming-semantic-colors).
+```
+
+Slugs come from Astro's own slugger: lowercase, punctuation dropped, spaces
+collapsed to hyphens, and repeated headings suffixed (`-1`, `-2`, …). Open the
+rendered page and click the `#` if you want the exact fragment.
 
 ## Using components in MDX
 

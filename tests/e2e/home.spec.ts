@@ -180,3 +180,53 @@ test("the homepage Writing section has no serious accessibility violations", asy
       .map((violation) => violation.id),
   ).toEqual([]);
 });
+
+test("homepage headings follow one hierarchy and one scale", async ({ page }) => {
+  test.skip(recent.length === 0, "No Writing section to compare");
+  await page.goto("/");
+
+  // h1, then h2 section headings, with article titles as h3 beneath Writing.
+  expect(await page.locator("main#main h1").count()).toBe(1);
+  expect(await page.locator("main#main h1 ~ * h1").count()).toBe(0);
+
+  const sectionHeadings = page.locator("main#main section > h2");
+  const headings = await sectionHeadings.evaluateAll((nodes) =>
+    nodes.map((node) => ({
+      text: (node.textContent ?? "").trim(),
+      size: Number.parseFloat(getComputedStyle(node).fontSize),
+    })),
+  );
+  expect(headings.length).toBeGreaterThanOrEqual(3);
+
+  // Writing, Resources, Tech & Craft: one identical scale.
+  const sizes = new Set(headings.map((heading) => heading.size));
+  expect(sizes.size).toBe(1);
+  const sectionSize = headings[0].size;
+
+  const writingHeading = section(page).locator("#writing-heading");
+  const writingSize = await writingHeading.evaluate((node) =>
+    Number.parseFloat(getComputedStyle(node).fontSize),
+  );
+  expect(writingSize).toBe(sectionSize);
+
+  // Entry titles are h3 and strictly smaller than their section heading.
+  const entries = section(page).locator("ol h3");
+  await expect(entries).toHaveCount(recent.length);
+  const entrySizes = await entries.evaluateAll((nodes) =>
+    nodes.map((node) => Number.parseFloat(getComputedStyle(node).fontSize)),
+  );
+  for (const size of entrySizes) expect(size).toBeLessThan(sectionSize);
+
+  // The homepage h1 is the strongest element on the page.
+  const h1Size = await page
+    .locator("main#main h1")
+    .evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize));
+  expect(h1Size).toBeGreaterThan(sectionSize);
+
+  // Descriptions are secondary to their entry title.
+  const descriptionSize = await section(page)
+    .locator("ol p")
+    .first()
+    .evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize));
+  expect(descriptionSize).toBeLessThan(entrySizes[0]);
+});

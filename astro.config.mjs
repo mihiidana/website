@@ -1,11 +1,13 @@
 // @ts-check
 
+import { satteri, satteriHeadingIdsPlugin } from "@astrojs/markdown-satteri";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
 import svelte from "@astrojs/svelte";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, fontProviders } from "astro/config";
 
+import { headingPermalinksPlugin } from "./src/lib/heading-permalinks";
 import { site } from "./src/lib/site";
 
 // https://astro.build/config
@@ -30,6 +32,14 @@ export default defineConfig({
   integrations: [svelte(), mdx(), sitemap()],
 
   markdown: {
+    // Astro 7's default Markdown processor is Sätteri; naming it here is what
+    // lets the pipeline take HAST plugins. Heading IDs are Astro's job, so
+    // `satteriHeadingIdsPlugin()` runs first and the permalink plugin only
+    // decorates the IDs it has already assigned. `.md` and `.mdx` share this
+    // processor, so both formats get identical anchors.
+    processor: satteri({
+      hastPlugins: [satteriHeadingIdsPlugin(), headingPermalinksPlugin],
+    }),
     // Dual Shiki themes: code blocks follow the light/dark toggle. Light is
     // inlined as the default color; the dark palette is applied by the
     // `.dark .astro-code` rules in src/styles/prose.css.

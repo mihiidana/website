@@ -44,6 +44,61 @@
   border-radius: 0;
 }
 
+/* The site header is sticky (h-16), so a fragment jump must clear it. */
+.prose :where(h2, h3, h4, h5, h6) {
+  scroll-margin-top: 5rem;
+}
+
+/*
+ * Heading permalinks. The anchor is emitted empty by
+ * `src/lib/heading-permalinks.ts` and the `#` is drawn here so it never enters
+ * the heading's text content (Astro collects that text as heading metadata).
+ *
+ * The glyph is subtle at rest and appears on hover or keyboard focus. It is
+ * always present in the accessibility tree — the accessible name is the
+ * plugin's `aria-label` — and `opacity` rather than `display` keeps it
+ * focusable, so keyboard users can tab to it on touch-capable devices too.
+ */
+.prose :where(.heading-anchor) {
+  margin-inline-start: 0.375em;
+  color: var(--muted-foreground);
+  font-weight: 400;
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+}
+
+.prose :where(.heading-anchor)::after {
+  content: "#";
+}
+
+.prose :where(h2, h3, h4, h5, h6):hover :where(.heading-anchor),
+.prose :where(.heading-anchor):focus-visible {
+  opacity: 1;
+}
+
+.prose :where(.heading-anchor):hover {
+  color: var(--foreground);
+}
+
+.prose :where(.heading-anchor):focus-visible {
+  border-radius: 0;
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 50%, transparent);
+}
+
+@media (hover: none) {
+  .prose :where(.heading-anchor) {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prose :where(.heading-anchor) {
+    transition: none;
+  }
+}
+
 /*
  * Tables scroll horizontally instead of squeezing columns, and code inside
  * cells never breaks mid-token (semantic token names are long and hyphenated).
