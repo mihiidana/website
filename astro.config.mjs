@@ -5,6 +5,7 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 
 import react from "@astrojs/react";
+import svelte from "@astrojs/svelte";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, fontProviders } from "astro/config";
 
@@ -43,7 +44,7 @@ export default defineConfig({
     enabled: false,
   },
 
-  integrations: [react()],
+  integrations: [react(), svelte()],
 
   security: {
     // Hash-based CSP emitted as a <meta> tag on every page. Policy intent:

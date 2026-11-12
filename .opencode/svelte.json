@@ -1,0 +1,17 @@
+{
+  "$schema": "https://svelte.dev/opencode/schema.json",
+  "mcp": {
+    "type": "local",
+    "enabled": true
+  },
+  "subagent": {
+    "enabled": true
+  },
+  "skills": {
+    "enabled": true
+  },
+  "instructions": {
+    "enabled": true
+  },
+  "autoupdate": true
+}
