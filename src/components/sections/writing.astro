@@ -1,8 +1,8 @@
 ---
 /**
- * Homepage Writing section: the newest few published posts, with the heading
- * and the archive link both pointing at /blog/. Rendered only when at least
- * one post is published — an empty heading would be worse than no section.
+ * Homepage Writing section: the newest few published posts. The heading is the
+ * single link to the archive at /blog/. Rendered only when at least one post is
+ * published — an empty heading would be worse than no section.
  */
 import PostList from "@/components/blog/post-list.astro";
 import type { BlogPost } from "@/lib/blog";
@@ -17,24 +17,16 @@ const copy = site.writing;
 ---
 
 <section aria-labelledby="writing-heading" class="border-t pt-6">
-  <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-    <h2 id="writing-heading" class="text-lg font-semibold tracking-tight">
-      <a
-        href="/blog/"
-        class="underline-offset-4 transition-colors hover:text-muted-foreground focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-      >
-        {copy.title}
-      </a>
-    </h2>
+  <h2 id="writing-heading" class="text-lg font-semibold tracking-tight">
     <a
       href="/blog/"
-      class="font-mono text-xs text-muted-foreground transition-colors hover:text-foreground focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+      class="underline-offset-4 transition-colors hover:text-muted-foreground focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
     >
-      {copy.archiveLink}
+      {copy.title}
     </a>
-  </div>
+  </h2>
 
-  <div class="mt-4">
+  <div class="mt-6">
     <PostList posts={posts} />
   </div>
 </section>

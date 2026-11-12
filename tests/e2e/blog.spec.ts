@@ -141,6 +141,88 @@ for (const post of published) {
   });
 }
 
+test("an article uses the shared site container, not a narrower inner measure", async ({
+  page,
+}) => {
+  const post = published[0];
+  test.skip(!post, "No published post to measure");
+  await page.goto(`${CONTENT_PREFIX}${post.id}/`);
+
+  const boxes = await page.evaluate(() => {
+    const article = document.querySelector("main#main article") as HTMLElement | null;
+    const header = article?.querySelector("header");
+    const body = article?.querySelector(".prose");
+    const main = document.querySelector("main#main") as HTMLElement | null;
+    if (!article || !header || !body || !main) return null;
+    const rect = (node: Element) => node.getBoundingClientRect();
+    return {
+      article: { left: rect(article).left, right: rect(article).right },
+      header: { left: rect(header).left, right: rect(header).right },
+      body: { left: rect(body).left, right: rect(body).right },
+      main: {
+        left: rect(main).left,
+        right: rect(main).right,
+        paddingLeft: Number.parseFloat(getComputedStyle(main).paddingLeft),
+      },
+      maxWidth: getComputedStyle(article).maxWidth,
+    };
+  });
+  expect(boxes).not.toBeNull();
+  if (!boxes) return;
+
+  // The article fills the main content box (which already carries the site
+  // gutters), so header and body share identical edges.
+  expect(boxes.header.left).toBeCloseTo(boxes.body.left, 1);
+  expect(boxes.header.right).toBeCloseTo(boxes.body.right, 1);
+  expect(boxes.article.left).toBeCloseTo(boxes.main.left, 1);
+  expect(boxes.article.right).toBeCloseTo(boxes.main.right, 1);
+  expect(boxes.maxWidth).toBe("none");
+});
+
+test("article code blocks are square, borderless surfaces on theme tokens", async ({ page }) => {
+  const post = published.find((entry) => entry.id === "css-design-tokens") ?? published[0];
+  test.skip(!post, "No published post to measure");
+  await page.goto(`${CONTENT_PREFIX}${post.id}/`);
+
+  const block = page.locator(".prose pre").first();
+  await expect(block).toBeVisible();
+
+  const style = await block.evaluate((node) => {
+    const computed = getComputedStyle(node);
+    return {
+      radius: computed.borderTopLeftRadius,
+      shadow: computed.boxShadow,
+      background: computed.backgroundColor,
+      muted: getComputedStyle(document.documentElement).getPropertyValue("--muted").trim(),
+    };
+  });
+  expect(style.radius).toBe("0px");
+  expect(style.shadow).toBe("none");
+  expect(style.background).not.toBe("rgba(0, 0, 0, 0)");
+  expect(style.muted).not.toBe("");
+
+  // The surface follows the theme toggle rather than a hardcoded color.
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.evaluate(() => {
+    document.documentElement.classList.remove("dark");
+    localStorage.setItem("theme", "light");
+  });
+  const lightBackground = await block.evaluate((node) => getComputedStyle(node).backgroundColor);
+  expect(lightBackground).not.toBe(style.background);
+});
+
+test("article pages do not overflow horizontally on mobile", async ({ page }) => {
+  const post = published[0];
+  test.skip(!post, "No published post to measure");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`${CONTENT_PREFIX}${post.id}/`);
+
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow).toBeLessThanOrEqual(0);
+});
+
 for (const post of drafts) {
   test(`draft ${post.id} is not published`, async ({ page }) => {
     const response = await page.goto(`${CONTENT_PREFIX}${post.id}/`);

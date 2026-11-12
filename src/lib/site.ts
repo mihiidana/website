@@ -56,7 +56,6 @@ export type SiteWriting = {
   description: string;
   intro: string;
   empty: string;
-  archiveLink: string;
   feedTitle: string;
   feedDescription: string;
 };
@@ -85,7 +84,6 @@ export const site: SiteConfig = {
       "Essays and notes by mihidana on software, craft, and whatever else is worth the words.",
     intro: "Longer pieces on software, craft, and the things I keep coming back to.",
     empty: "Nothing published yet. The first piece is on its way.",
-    archiveLink: "View all writing →",
     feedTitle: "mihidana",
     feedDescription: "Writing by mihidana.",
   },

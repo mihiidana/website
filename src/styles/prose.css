@@ -31,6 +31,20 @@
 }
 
 /*
+ * Code blocks are square-cornered surfaces on the muted token, matching the
+ * site's zero-radius geometry. The typography plugin ships a 0.375rem radius
+ * that reads as a card; it is reset here rather than globally.
+ */
+.prose :where(pre) {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.prose :where(pre code) {
+  border-radius: 0;
+}
+
+/*
  * Tables scroll horizontally instead of squeezing columns, and code inside
  * cells never breaks mid-token (semantic token names are long and hyphenated).
  */

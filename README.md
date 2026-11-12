@@ -65,7 +65,7 @@ path is the URL slug; frontmatter supplies `title`, `description`, `pubDate`,
 optional `updatedDate`, and `draft`. Drafts never build.
 
 The homepage shows the four newest published posts in a **Writing** section;
-the heading and the "View all writing" link both open `/blog/`, which lists the
+the heading links to `/blog/`, which lists the
 full archive newest first. There is no Blog link in the header by design.
 `/rss.xml` is the feed and `sitemap-index.xml` covers every route.
 

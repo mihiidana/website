@@ -32,7 +32,7 @@ Run `pnpm validate` — or at minimum `pnpm check` and `pnpm typecheck` — befo
 - `src/lib/` — shared constants and pure helpers: `site.ts` (config), `blog.ts` (post paths, sorting, draft filter, dates), `theme.ts` (light/dark system), `utils.ts` (`cn` and shadcn-svelte prop helper types).
 - `src/content.config.ts` + `src/content/blog/` — the `blog` collection: one schema for `.md` and `.mdx`, file path = slug. Authoring guide: `docs/writing.md`; templates in `docs/templates/`. The committed posts are demonstration content, safe to edit or delete.
 - `src/components/blog/post-list.astro` — the editorial list shared by the homepage Writing section and `/blog/`.
-- `src/components/sections/writing.astro` — homepage section: newest four posts, heading and archive link both point at `/blog/`.
+- `src/components/sections/writing.astro` — homepage section: newest four posts; the heading is the only link to `/blog/` (no duplicate "view all").
 - `src/styles/global.css` — Tailwind, shadcn semantic tokens, theme variables, and the typography plugin registration. `src/styles/prose.css` — article typography (token mapping for `prose` plus the Shiki dark-palette overrides), imported only by the article route. Syntax themes are the high-contrast GitHub pair set in `astro.config.mjs`; the stock pair fails AA on comments, so don't switch back.
 - `tests/unit/` — vitest tests of shared constants, blog helpers, and the blog schema. `tests/e2e/` — Playwright smoke, accessibility, CSP, theme, SEO, widget, music-player, homepage writing, blog, MDX island, and link checks.
 

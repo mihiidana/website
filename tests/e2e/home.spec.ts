@@ -99,18 +99,57 @@ test("the homepage Writing section lists the newest published posts", async ({ p
   }
 });
 
-test("the Writing heading and the archive link both open /blog/", async ({ page }) => {
+test("the Writing heading is the only archive link", async ({ page }) => {
   test.skip(recent.length === 0, "No published posts to link to");
   await page.goto("/");
 
   const writing = section(page);
-  await expect(writing.locator("#writing-heading").getByRole("link")).toHaveAttribute(
-    "href",
-    "/blog/",
+  const headingLink = writing.locator("#writing-heading").getByRole("link");
+  await expect(headingLink).toHaveAttribute("href", "/blog/");
+
+  // Exactly one link to the archive: the heading. No duplicate "View all".
+  const archiveLinks = await writing
+    .getByRole("link")
+    .evaluateAll((nodes) =>
+      nodes
+        .map((node) => (node as HTMLAnchorElement).getAttribute("href"))
+        .filter((href) => href === "/blog/"),
+    );
+  expect(archiveLinks).toHaveLength(1);
+});
+
+test("the Writing section is an editorial list, not stacked dividers", async ({ page }) => {
+  test.skip(recent.length === 0, "No Writing section to measure");
+  await page.goto("/");
+
+  const writing = section(page);
+  const entries = writing.locator("ol > li");
+  await expect(entries).toHaveCount(recent.length);
+
+  // No borders between entries and none under the heading.
+  const widths = await entries.evaluateAll((nodes) =>
+    nodes.map((node) => {
+      const style = getComputedStyle(node);
+      return `${style.borderTopWidth} ${style.borderBottomWidth}`;
+    }),
   );
-  await expect(
-    writing.getByRole("link", { name: new RegExp(site.writing.archiveLink) }),
-  ).toHaveAttribute("href", "/blog/");
+  for (const value of widths) expect(value).toBe("0px 0px");
+
+  const listBorder = await writing
+    .locator("ol")
+    .evaluate((node) => getComputedStyle(node).borderTopWidth);
+  expect(listBorder).toBe("0px");
+
+  const headingBorder = await writing
+    .locator("#writing-heading")
+    .evaluate((node) => getComputedStyle(node).borderBottomWidth);
+  expect(headingBorder).toBe("0px");
+
+  // Entries still have real vertical breathing room.
+  const gaps = await entries.evaluateAll((nodes) =>
+    nodes.map((node) => Number.parseFloat(getComputedStyle(node as HTMLElement).marginTop)),
+  );
+  expect(gaps.every((gap) => gap === 0)).toBe(true);
 });
 
 test("the homepage still renders its widgets and existing sections", async ({ page }) => {

@@ -16,9 +16,9 @@ const { posts, headingLevel = "h2" } = Astro.props;
 const Heading = headingLevel;
 ---
 
-<ol class="flex flex-col divide-y border-t">
+<ol class="flex flex-col gap-8">
   {posts.map((post) => (
-    <li class="py-6">
+    <li>
       <article>
         <time datetime={isoDate(post.data.pubDate)} class="font-mono text-xs text-muted-foreground">
           {displayDate(post.data.pubDate)}
@@ -31,7 +31,7 @@ const Heading = headingLevel;
             {post.data.title}
           </a>
         </Heading>
-        <p class="mt-1 max-w-xl text-pretty text-muted-foreground">{post.data.description}</p>
+        <p class="mt-1 text-pretty text-muted-foreground">{post.data.description}</p>
       </article>
     </li>
   ))}
