@@ -18,6 +18,8 @@ let {
 <!--
 Discriminated Unions + Destructing (required for bindable) do not
 get along, so we shut typescript up by casting `value` to `never`.
+Arbitrary orientation variants keep this component independent of the
+shadcn preset CSS (which defines data-horizontal/data-vertical helpers).
 -->
 <SliderPrimitive.Root
   bind:ref
@@ -25,7 +27,7 @@ get along, so we shut typescript up by casting `value` to `never`.
   data-slot="slider"
   {orientation}
   class={cn(
-    "relative flex w-full touch-none items-center select-none data-disabled:opacity-50 data-vertical:h-full data-vertical:w-auto data-vertical:flex-col",
+    "relative flex w-full touch-none items-center select-none data-disabled:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
     className,
   )}
   {...restProps}
@@ -35,12 +37,14 @@ get along, so we shut typescript up by casting `value` to `never`.
       data-slot="slider-track"
       data-orientation={orientation}
       class={cn(
-        "relative grow overflow-hidden rounded-full bg-muted select-none data-horizontal:h-1 data-horizontal:w-full data-vertical:h-full data-vertical:w-1",
+        "relative grow overflow-hidden rounded-full bg-muted select-none data-[orientation=horizontal]:h-1 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1",
       )}
     >
       <SliderPrimitive.Range
         data-slot="slider-range"
-        class={cn("absolute bg-primary select-none data-horizontal:h-full data-vertical:w-full")}
+        class={cn(
+          "absolute bg-primary select-none data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full",
+        )}
       />
     </span>
     {#each thumbItems as thumb (thumb.index)}

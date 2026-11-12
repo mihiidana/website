@@ -58,8 +58,8 @@ $effect(() => {
   audio.muted = muted;
 });
 
-// Wheel over the widget adjusts volume. The listener is non-passive so the
-// page does not scroll while the level changes.
+// Wheel over the widget adjusts volume; the page keeps scrolling normally,
+// so the listener stays passive.
 $effect(() => {
   const card = cardEl;
   if (!card) return;
@@ -81,7 +81,7 @@ $effect(() => {
     muted = next === 0;
   };
 
-  card.addEventListener("wheel", onWheel, { passive: false });
+  card.addEventListener("wheel", onWheel, { passive: true });
   return () => card.removeEventListener("wheel", onWheel);
 });
 </script>
