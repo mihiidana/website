@@ -30,14 +30,20 @@ Requires Node `>=26.13.0` and pnpm `12.18.0` (`packageManager`).
 │   │   ├── sections/     # composed page sections driven by site.ts
 │   │   ├── widgets/      # Svelte 5 islands (clock, led-matrix, music-player)
 │   │   ├── ui/           # shadcn-svelte primitives (button, card, badge, slider)
-│   │   └── seo/          # head.astro: title, canonical, OG, Twitter
-│   ├── lib/              # site.ts (identity + copy), theme.ts, utils.ts (cn)
-│   ├── pages/            # file-based routes (index.astro)
-│   └── styles/           # global.css: Tailwind, shadcn tokens, fonts
+│   │   └── seo/          # head.astro (title, canonical, OG, Twitter),
+│   │                     # article-json-ld.astro (BlogPosting)
+│   ├── content/
+│   │   └── blog/         # posts: .md or .mdx, one collection, path = slug
+│   ├── lib/              # site.ts, blog.ts, theme.ts, utils.ts (cn)
+│   ├── pages/            # file-based routes (index.astro, blog/, rss.xml)
+│   └── styles/           # global.css: Tailwind, tokens, fonts; prose.css: articles
 ├── tests
-│   ├── unit/             # vitest: shared theme constants
-│   └── e2e/              # Playwright: smoke, a11y, CSP, theme, SEO, widgets, links
+│   ├── unit/             # vitest: theme constants, blog helpers, blog schema
+│   └── e2e/              # Playwright: smoke, a11y, CSP, theme, SEO, widgets,
+│                         # blog, links
 ├── components.json       # shadcn-svelte config
+├── src/content.config.ts # blog collection schema (glob over .md + .mdx)
+├── docs/writing.md       # publishing guide; templates in docs/templates/
 ├── wrangler.jsonc        # Cloudflare Worker name and dist/ assets
 ├── astro.config.mjs      # site URL and CSP configuration
 ├── playwright.config.ts  # E2E runs against the production build
@@ -49,6 +55,15 @@ Site identity, description, socials, and page copy are centralized in
 homepage; adding a page means adding a key under `pages` and rendering it from a
 matching route under `src/pages/`. Use the `@/` import alias rather than relative
 imports: Biome enforces this.
+
+## Blog
+
+Posts are Markdown (`.md`) or MDX (`.mdx`) files in `src/content/blog/`. The file
+path is the URL slug; frontmatter supplies `title`, `description`, `pubDate`,
+optional `updatedDate`, and `draft`. Drafts never build. `/blog/` lists
+published posts newest first, `/rss.xml` is the feed, and `sitemap-index.xml`
+covers every route. See [docs/writing.md](./docs/writing.md) for the full
+authoring contract and [docs/templates/](./docs/templates/) for starting files.
 
 Agent instructions for working in this repo live in [AGENTS.md](./AGENTS.md).
 

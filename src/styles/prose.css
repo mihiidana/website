@@ -1,0 +1,53 @@
+/*
+ * Article styles, layered on the `prose` utility from
+ * @tailwindcss/typography. Imported only by `src/pages/blog/[...slug].astro`, so
+ * the site's global stylesheet stays untouched beyond the plugin registration.
+ *
+ * Colors map the plugin's `--tw-prose-*` variables onto the site's semantic
+ * tokens, which makes light and dark follow the existing theme toggle.
+ */
+.prose {
+  --tw-prose-body: var(--foreground);
+  --tw-prose-headings: var(--foreground);
+  --tw-prose-lead: var(--muted-foreground);
+  --tw-prose-links: var(--foreground);
+  --tw-prose-bold: var(--foreground);
+  --tw-prose-counters: var(--muted-foreground);
+  --tw-prose-bullets: var(--muted-foreground);
+  --tw-prose-hr: var(--border);
+  --tw-prose-quotes: var(--muted-foreground);
+  --tw-prose-quote-borders: var(--border);
+  --tw-prose-captions: var(--muted-foreground);
+  --tw-prose-code: var(--foreground);
+  --tw-prose-pre-code: var(--foreground);
+  --tw-prose-pre-bg: var(--muted);
+  --tw-prose-th-borders: var(--border);
+  --tw-prose-td-borders: var(--border);
+}
+
+.prose :where(a):not(:where([class~="not-prose"] *)) {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+.prose :where(code):not(:where(pre *, [class~="not-prose"] *))::before,
+.prose :where(code):not(:where(pre *, [class~="not-prose"] *))::after {
+  content: "";
+}
+
+/*
+ * Shiki dual themes (see astro.config.mjs). With `defaultColor: false` Shiki
+ * writes both palettes as CSS variables on every token, so the theme toggle
+ * switches syntax colors with no extra JavaScript. `!important` is required
+ * because Shiki emits these values as inline `style` attributes.
+ */
+/* biome-ignore-start lint/complexity/noImportantStyles: overriding Shiki's inline styles */
+.dark .astro-code,
+.dark .astro-code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+  font-style: var(--shiki-dark-font-style) !important;
+  font-weight: var(--shiki-dark-font-weight) !important;
+  text-decoration: var(--shiki-dark-text-decoration) !important;
+}
+/* biome-ignore-end lint/complexity/noImportantStyles: end */

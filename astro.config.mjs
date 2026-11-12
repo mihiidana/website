@@ -1,5 +1,7 @@
 // @ts-check
 
+import mdx from "@astrojs/mdx";
+import sitemap from "@astrojs/sitemap";
 import svelte from "@astrojs/svelte";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, fontProviders } from "astro/config";
@@ -25,7 +27,18 @@ export default defineConfig({
     enabled: false,
   },
 
-  integrations: [svelte()],
+  integrations: [svelte(), mdx(), sitemap()],
+
+  markdown: {
+    // Dual Shiki themes: code blocks follow the light/dark toggle. The
+    // `--shiki-*` variables are consumed by `.prose` rules in global.css;
+    // `defaultColor: false` keeps Shiki from inlining one theme's colors.
+    shikiConfig: {
+      themes: { light: "github-light", dark: "github-dark" },
+      defaultColor: false,
+      wrap: true,
+    },
+  },
 
   security: {
     // Hash-based CSP emitted as a <meta> tag on every page. Policy intent:

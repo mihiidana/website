@@ -26,10 +26,11 @@ Writing lives as Markdown files committed to this repository and is built by Ast
 
 - Astro 7 with Svelte 5 islands, Tailwind CSS 4, shadcn-svelte components (Bits UI, neutral base color), `@lucide/svelte` icons, Satoshi Variable (Fontshare) as the loaded sans face, and Caveat Variable for the `font-signature` wordmark.
 - Static-first output served as Cloudflare Worker assets; no confirmed server-side runtime features beyond wrangler asset hosting.
-- Confirmed visitor capabilities, all currently unimplemented: read posts, browse projects, use small browser tools, contact mihidana, and learn who mihidana is (about).
-- Publishing mechanism is Markdown in the repo; post structure (taxonomy, drafts, feeds) is not yet decided.
-- Undecided and not to be invented: project list, tool lineup, contact channels, post topics, analytics, RSS/sitemap behavior. The only linked social profile is GitHub (`site.socials.github`).
-- Content is currently limited to a single homepage that renders its intro copy from `src/lib/site.ts`, plus site header, footer, and a light/dark theme toggle. No posts, projects, or tools exist yet.
+- Confirmed visitor capabilities: read the blog at `/blog/` and individual posts, use small browser tools, and reach mihidana. Projects, a contact page, and an about page are still unimplemented.
+- Publishing mechanism is Markdown (`.md`) or MDX (`.mdx`) committed to `src/content/blog/`; Astro's content collection validates frontmatter and generates routes, RSS, and sitemap entries at build time.
+- Blog structure is settled: typed frontmatter (`title`, `description`, `pubDate`, optional `updatedDate`, `draft`), path-derived slugs, draft exclusion from every surface, `/rss.xml`, and an `@astrojs/sitemap` sitemap. No tags, categories, pagination, search, comments, or newsletter — see `docs/writing.md` for the authoring contract.
+- Undecided and not to be invented: project list, tool lineup, contact channels, post topics, analytics, and per-post social images. The only linked social profile is GitHub (`site.socials.github`).
+- Content is currently limited to a homepage that renders its intro copy from `src/lib/site.ts`, site header, footer, a light/dark theme toggle, and an empty blog that shows an explicit empty state until a post is committed.
 
 ## Brand Commitments
 

@@ -28,6 +28,9 @@
     "pre-commit": "pnpm exec lint-staged"
   },
   "dependencies": {
+    "@astrojs/mdx": "^8.1.5",
+    "@astrojs/rss": "^4.0.19",
+    "@astrojs/sitemap": "^3.7.4",
     "@astrojs/svelte": "^9.1.5",
     "@lucide/svelte": "^1.72.0",
     "@tailwindcss/vite": "^4.3.5",
@@ -42,6 +45,7 @@
     "@biomejs/biome": "2.6.6",
     "@internationalized/date": "^3.12.4",
     "@playwright/test": "^1.65.0",
+    "@tailwindcss/typography": "^0.5.20",
     "@types/node": "^26.6.6",
     "bits-ui": "^2.21.0",
     "lint-staged": "^17.6.0",

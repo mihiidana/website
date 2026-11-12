@@ -51,12 +51,22 @@ export type SitePage = {
   };
 };
 
+export type SiteBlog = {
+  title: string;
+  description: string;
+  intro: string;
+  empty: string;
+  feedTitle: string;
+  feedDescription: string;
+};
+
 export type SiteConfig = {
   name: string;
   wordmark: string;
   description: string;
   url: string;
   socials: Readonly<Record<string, string>>;
+  blog: SiteBlog;
   pages: Readonly<Record<string, SitePage>>;
 };
 
@@ -67,6 +77,14 @@ export const site: SiteConfig = {
   url: "https://hey.mihiidana.workers.dev",
   socials: {
     github: "https://github.com/mihiidana",
+  },
+  blog: {
+    title: "Blog",
+    description: "Writing by mihidana on software, craft, and whatever else is worth the words.",
+    intro: "Notes and longer pieces on software, craft, and the things I keep coming back to.",
+    empty: "Nothing published yet. The first post is on its way.",
+    feedTitle: "mihidana",
+    feedDescription: "Writing by mihidana.",
   },
   pages: {
     home: {

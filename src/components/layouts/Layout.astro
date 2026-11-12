@@ -12,9 +12,21 @@ import { THEME_COLORS, THEME_STORAGE_KEY } from "@/lib/theme";
 interface Props {
   description?: string;
   title?: string;
+  /** Open Graph object type; articles pass "article". */
+  type?: "website" | "article";
+  publishedTime?: string;
+  modifiedTime?: string;
+  image?: string;
 }
 
-const { description = site.description, title = site.name } = Astro.props;
+const {
+  description = site.description,
+  title = site.name,
+  type,
+  publishedTime,
+  modifiedTime,
+  image,
+} = Astro.props;
 
 // Pre-paint theme bootstrap: applies the persisted (or default dark) theme
 // before first render. It must stay inline, so constants are interpolated
@@ -60,7 +72,14 @@ Astro.csp?.insertScriptHash(`sha256-${bootstrapHash}`);
     <link rel="manifest" href="/site.webmanifest">
     <meta name="theme-color" content={THEME_COLORS.dark}>
     <meta name="generator" content={Astro.generator}>
-    <PageHead title={title} description={description} />
+    <PageHead
+      title={title}
+      description={description}
+      type={type}
+      publishedTime={publishedTime}
+      modifiedTime={modifiedTime}
+      image={image}
+    />
     <script is:inline set:html={themeBootstrap} />
     <Font cssVariable="--font-satoshi" preload />
     <Font cssVariable="--font-caveat" preload />
