@@ -1,5 +1,5 @@
 ---
-import ModeToggle from "@/components/layouts/mode-toggle.astro";
+import ModeToggle from "@/components/layouts/mode-toggle.svelte";
 import { site } from "@/lib/site";
 ---
 
@@ -12,6 +12,6 @@ import { site } from "@/lib/site";
     >
       {site.wordmark}
     </a>
-    <ModeToggle />
+    <ModeToggle client:load />
   </nav>
 </header>

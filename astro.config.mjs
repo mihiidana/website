@@ -1,28 +1,10 @@
 // @ts-check
 
-import { createHash } from "node:crypto";
-import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
-
-import react from "@astrojs/react";
+import svelte from "@astrojs/svelte";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, fontProviders } from "astro/config";
 
 import { site } from "./src/lib/site";
-
-// Base UI's slider renders a prehydration <script> inline from the React
-// island's SSR output, so Astro can't hash it automatically. Its content is
-// static per dependency version — hash it here so the CSP allows exactly
-// that script. Resolved with createRequire because the prehydration module
-// is not exported under "import" conditions.
-const requireFromProject = createRequire(join(process.cwd(), "package.json"));
-const baseUiDir = dirname(requireFromProject.resolve("@base-ui/react/package.json"));
-const { script: sliderPrehydrationScript } = requireFromProject(
-  join(baseUiDir, "slider/thumb/prehydrationScript.min.js"),
-);
-const sliderPrehydrationHash = /** @type {`sha256-${string}`} */ (
-  `sha256-${createHash("sha256").update(sliderPrehydrationScript).digest("base64")}`
-);
 
 // https://astro.build/config
 // Fully static site — no adapter needed.
@@ -43,17 +25,16 @@ export default defineConfig({
     enabled: false,
   },
 
-  integrations: [react()],
+  integrations: [svelte()],
 
   security: {
     // Hash-based CSP emitted as a <meta> tag on every page. Policy intent:
     //
     // - Scripts: 'self' plus per-page hashes. Astro hashes the scripts it
-    //   bundles; the inline theme bootstrap registers its hash in Layout.astro
-    //   and Base UI's slider prehydration script is hashed from the package
-    //   (see above). No 'unsafe-inline', ever.
+    //   bundles; the inline theme bootstrap registers its hash in Layout.astro.
+    //   No 'unsafe-inline', ever.
     // - Styles: 'self' plus hashes for <style> elements, and 'unsafe-inline'
-    //   scoped to style ATTRIBUTES only — Base UI positions elements with
+    //   scoped to style ATTRIBUTES only — Bits UI positions elements with
     //   style="" (e.g. the slider thumb).
     // - Everything the site actually loads is same-origin: scripts, styles,
     //   fonts (Astro adds font-src 'self' itself), images, and the audio file.
@@ -67,11 +48,10 @@ export default defineConfig({
     csp: {
       scriptDirective: {
         resources: ["'self'"],
-        hashes: [sliderPrehydrationHash],
       },
       styleDirective: {
         // `resources` replaces Astro's defaults, so 'self' must be re-added
-        // for style elements (they stay hash-locked). Base UI renders
+        // for style elements (they stay hash-locked). Bits UI renders
         // positioned elements with style="" attributes (e.g. the slider
         // thumb), so 'unsafe-inline' is scoped to attributes only.
         resources: [
@@ -94,6 +74,11 @@ export default defineConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    resolve: {
+      // Lucide and Bits UI ship uncompiled .svelte modules; Vite must process
+      // them during SSR instead of handing them to Node's ESM loader.
+      noExternal: ["@lucide/svelte", "bits-ui"],
+    },
   },
 
   fonts: [

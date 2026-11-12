@@ -3,5 +3,8 @@
   "editor.formatOnSave": true,
   "[astro]": {
     "editor.defaultFormatter": "astro-build.astro-vscode"
+  },
+  "[svelte]": {
+    "editor.defaultFormatter": "biomejs.biome"
   }
 }

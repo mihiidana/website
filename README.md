@@ -9,10 +9,11 @@ not built yet.
 ## Stack
 
 - [Astro 7](https://docs.astro.build) static output
-- React 19 islands via `@astrojs/react`
+- Svelte 5 islands via `@astrojs/svelte`
 - Tailwind CSS 4 via `@tailwindcss/vite`
-- [shadcn/ui](https://ui.shadcn.com) components on Base UI (`base-nova`, neutral base color)
-- Biome for linting and formatting
+- [shadcn-svelte](https://www.shadcn-svelte.com) components on Bits UI (neutral base color)
+- [`@lucide/svelte`](https://lucide.dev) icons
+- Biome for linting and formatting (including `.svelte` files)
 - Cloudflare Workers static assets via Wrangler
 
 Requires Node `>=26.13.0` and pnpm `12.18.0` (`packageManager`).
@@ -25,18 +26,18 @@ Requires Node `>=26.13.0` and pnpm `12.18.0` (`packageManager`).
 ├── src
 │   ├── components/
 │   │   ├── layouts/      # Layout.astro (head, theme bootstrap, chrome),
-│   │   │                 # header, footer, container, mode-toggle
+│   │   │                 # header, footer, container, mode-toggle.svelte
 │   │   ├── sections/     # composed page sections driven by site.ts
-│   │   ├── widgets/      # React islands (clock, led-matrix, music-player)
-│   │   ├── ui/           # shadcn primitives (button, card, badge, slider)
+│   │   ├── widgets/      # Svelte 5 islands (clock, led-matrix, music-player)
+│   │   ├── ui/           # shadcn-svelte primitives (button, card, badge, slider)
 │   │   └── seo/          # head.astro: title, canonical, OG, Twitter
 │   ├── lib/              # site.ts (identity + copy), theme.ts, utils.ts (cn)
 │   ├── pages/            # file-based routes (index.astro)
 │   └── styles/           # global.css: Tailwind, shadcn tokens, fonts
 ├── tests
 │   ├── unit/             # vitest: shared theme constants
-│   └── e2e/              # Playwright: smoke, a11y, CSP, theme, SEO, links
-├── components.json       # shadcn config
+│   └── e2e/              # Playwright: smoke, a11y, CSP, theme, SEO, widgets, links
+├── components.json       # shadcn-svelte config
 ├── wrangler.jsonc        # Cloudflare Worker name and dist/ assets
 ├── astro.config.mjs      # site URL and CSP configuration
 ├── playwright.config.ts  # E2E runs against the production build
@@ -63,7 +64,7 @@ All commands run from the project root:
 | `pnpm preview`   | Previews the build locally                             |
 | `pnpm check`     | Lint and format check with Biome                       |
 | `pnpm check:fix` | Fix lint and format issues with Biome                  |
-| `pnpm typecheck` | Astro type check (`astro check`)                       |
+| `pnpm typecheck` | Type check (`astro check` + `svelte-check`)            |
 | `pnpm test`      | Unit tests (vitest)                                    |
 | `pnpm test:e2e`  | E2E + accessibility tests (Playwright; build first)    |
 | `pnpm validate`  | Everything CI runs: check, typecheck, test, build, e2e |
@@ -78,3 +79,11 @@ requires the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` secrets; see
 [`.env.example`](./.env.example) for the variable names.
 
 To deploy locally, run `wrangler login` once, then `pnpm deploy`.
+
+## AI tooling
+
+OMP loads the `astro-docs` and official Svelte MCP servers from
+[`.omp/mcp.json`](./.omp/mcp.json). OpenCode loads the `@sveltejs/opencode`
+plugin, which provides the Svelte MCP server, skills, and the
+`svelte-file-editor` subagent. Project skills live in `.agents/skills/`
+(gitignored) and are pinned in [`skills-lock.json`](./skills-lock.json).

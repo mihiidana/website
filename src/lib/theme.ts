@@ -5,7 +5,7 @@
  * Consumers:
  * - `Layout.astro` interpolates the constants into the pre-paint bootstrap
  *   script (so the theme applies before first render).
- * - `mode-toggle.astro` imports them for the toggle behavior.
+ * - `mode-toggle.svelte` imports them for the toggle behavior.
  * - `tests/unit/theme.test.ts` covers the constant contract.
  *
  * The bootstrap's fallback rule ("anything but a valid stored choice is
