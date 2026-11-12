@@ -1,6 +1,4 @@
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -132,7 +130,7 @@
 }
 
 /* Theme changes reveal through a circular clip; the animation lives in
-   mode-toggle.tsx. Stop the cross-fade underneath it. */
+   mode-toggle.svelte. Stop the cross-fade underneath it. */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
