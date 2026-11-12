@@ -1,5 +1,9 @@
-# Cloudflare Workers static assets pick this up and apply the headers.
-# https://developers.cloudflare.com/workers/configuration/headers/
+# Applied by Cloudflare Workers static assets.
+# https://developers.cloudflare.com/workers/static-assets/headers/
+#
+# The page-level CSP lives in a <meta> tag (astro.config.mjs). Meta CSP cannot
+# enforce frame-ancestors, so clickjacking protection is set here instead.
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY

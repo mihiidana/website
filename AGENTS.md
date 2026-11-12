@@ -31,15 +31,15 @@ Run `pnpm validate` — or at minimum `pnpm check` and `pnpm typecheck` — befo
 - `src/components/seo/head.astro` — title, canonical URL, Open Graph, Twitter Card for every page.
 - `src/lib/` — shared constants and pure helpers: `site.ts` (config), `theme.ts` (light/dark system), `utils.ts` (`cn`).
 - `src/styles/global.css` — Tailwind, shadcn semantic tokens, and theme variables.
-- `tests/unit/` — vitest tests of pure logic. `tests/e2e/` — Playwright smoke, accessibility, CSP, theme, and link checks.
+- `tests/unit/` — vitest tests of shared constants. `tests/e2e/` — Playwright smoke, accessibility, CSP, theme, SEO, music-player, and link checks.
 
 ## Rules
 
 - **Astro vs React.** Default to `.astro` components — they ship zero JavaScript. A React island is justified only by interaction static markup can't provide (music player, clock, LED matrix). For small behaviors prefer a `<script>` block in an Astro component.
 - **Imports.** Always the `@/` alias; Biome rejects relative imports.
 - **Styling.** Tailwind utilities with semantic tokens (`bg-background`, `text-muted-foreground`) — never raw hex or oklch values in markup. Token definitions change only in `global.css`. Any animation or transform must respect `prefers-reduced-motion` (use `motion-safe:`).
-- **Theme.** Dark is the default. All theme constants and pure logic live in `src/lib/theme.ts`; the pre-paint bootstrap is inlined by `Layout.astro` and the toggle is `mode-toggle.astro`. Don't introduce another storage key, color map, or bootstrap.
-- **CSP is on.** Never add `'unsafe-inline'` to `script-src` and never use inline event handlers (`onclick=`). Astro hashes bundled scripts automatically; an `is:inline` script must register its hash via `Astro.csp.insertScriptHash` (see `Layout.astro` for the pattern). `pnpm test:e2e` fails on CSP violations.
+- **Theme.** Dark is the default. All theme constants live in `src/lib/theme.ts`; the pre-paint bootstrap is inlined by `Layout.astro` and the toggle is `mode-toggle.astro`. The bootstrap's fallback rule is inline by necessity (it runs before modules) and is covered by `tests/e2e/theme.spec.ts`, including invalid, missing, and blocked storage. Don't introduce another storage key, color map, or bootstrap.
+- **CSP is on.** Never add `'unsafe-inline'` to `script-src` and never use inline event handlers (`onclick=`). Astro hashes bundled scripts automatically; an `is:inline` script must register its hash via `Astro.csp.insertScriptHash` (see `Layout.astro` for the pattern). Style attributes are allowed (`style-src-attr 'unsafe-inline'`) because Base UI positions elements with them; `<style>` elements stay hash-locked. `frame-ancestors` cannot be enforced from a meta tag, so clickjacking protection is `X-Frame-Options: DENY` in `public/_headers` (applied by Cloudflare). `pnpm test:e2e` fails on CSP violations.
 - **Content.** Copy comes from `site.ts`. Never invent content — no posts, projects, tools, metrics, or testimonials that don't exist. Publishing is Markdown committed to git; when the first post lands, add a content collection in `src/content.config.ts` with a minimal Zod schema (`title`, `description`, `publishedAt`, `draft`) — not before.
 - **SEO.** Page metadata routes through `src/components/seo/head.astro`. Titles compose as `${title} — ${site.name}`; descriptions must describe real content.
 - **Accessibility.** `Layout.astro` owns the single `<main id="main">` and skip link; one `<h1>` per page; visible `focus-visible:ring-3` states on interactive elements; `aria-label` on icon-only controls. E2E enforces WCAG 2 A/AA — serious or critical violations fail the build.
