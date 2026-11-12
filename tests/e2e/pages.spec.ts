@@ -65,7 +65,7 @@ for (const path of PAGES) {
       expect(csp).toMatch(/media-src 'self'/);
       expect(csp).toMatch(/connect-src 'self'/);
       expect(csp).toMatch(/frame-src 'none'/);
-      // Base UI renders style="" attributes; the exception is scoped to them.
+      // Bits UI renders style="" attributes; the exception is scoped to them.
       expect(csp).toMatch(/style-src-attr 'unsafe-inline'/);
       // The policy is only enforced where the browser supports it; the
       // response-header layer (public/_headers) adds X-Frame-Options.
@@ -79,7 +79,7 @@ for (const path of PAGES) {
       await page.getByRole("button", { name: "Toggle color theme" }).click();
       await expect(page.locator("html")).toHaveClass(/dark/);
 
-      // Exercise the Base UI slider (prehydration script + island) under CSP.
+      // Exercise the Bits UI slider island under CSP.
       const slider = page.getByRole("slider", { name: /Volume for/ });
       await expect(slider).toBeVisible();
       await slider.focus();

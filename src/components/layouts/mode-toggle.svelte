@@ -1,28 +1,7 @@
----
-import { Moon, Sun } from "lucide-react";
+<script lang="ts">
+import { Moon, Sun } from "@lucide/svelte";
 
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
----
-
-<button
-  type="button"
-  data-theme-toggle
-  class={cn(buttonVariants({ variant: "ghost", size: "icon" }), "relative")}
-  aria-label="Toggle color theme"
-  title="Toggle color theme"
->
-  <Sun
-    aria-hidden="true"
-    className="size-4 rotate-0 scale-100 transition-transform duration-300 dark:-rotate-90 dark:scale-0"
-  />
-  <Moon
-    aria-hidden="true"
-    className="absolute size-4 rotate-90 scale-0 transition-transform duration-300 dark:rotate-0 dark:scale-100"
-  />
-</button>
-
-<script>
+import { Button } from "@/components/ui/button";
 import { THEME_COLORS, THEME_STORAGE_KEY, type Theme } from "@/lib/theme";
 
 type ViewTransitionDocument = Document & {
@@ -76,7 +55,23 @@ function toggleTheme(event: MouseEvent) {
     })
     .catch(() => {});
 }
-
-const themeToggle = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
-themeToggle?.addEventListener("click", toggleTheme);
 </script>
+
+<Button
+  data-theme-toggle
+  variant="ghost"
+  size="icon"
+  class="relative"
+  aria-label="Toggle color theme"
+  title="Toggle color theme"
+  onclick={toggleTheme}
+>
+  <Sun
+    aria-hidden="true"
+    class="size-4 rotate-0 scale-100 transition-transform duration-300 dark:-rotate-90 dark:scale-0"
+  />
+  <Moon
+    aria-hidden="true"
+    class="absolute size-4 rotate-90 scale-0 transition-transform duration-300 dark:rotate-0 dark:scale-100"
+  />
+</Button>

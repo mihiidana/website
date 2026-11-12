@@ -1,5 +1,5 @@
 ---
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "@lucide/svelte";
 
 import { Badge } from "@/components/ui/badge";
 import type { SiteLink } from "@/lib/site";
@@ -25,13 +25,13 @@ const { heading, items } = Astro.props;
         >
           <Badge
             variant="outline"
-            className="h-7 rounded-md border-border px-2.5 font-mono text-xs font-normal text-muted-foreground transition-all duration-200 group-hover:border-foreground/30 group-hover:bg-muted group-hover:text-foreground group-focus-visible:border-foreground/30 group-focus-visible:bg-muted group-focus-visible:text-foreground motion-safe:group-hover:-translate-y-0.5 motion-safe:group-active:translate-y-0 motion-safe:group-focus-visible:-translate-y-0.5"
+            class="h-7 rounded-md border-border px-2.5 font-mono text-xs font-normal text-muted-foreground transition-all duration-200 group-hover:border-foreground/30 group-hover:bg-muted group-hover:text-foreground group-focus-visible:border-foreground/30 group-focus-visible:bg-muted group-focus-visible:text-foreground motion-safe:group-hover:-translate-y-0.5 motion-safe:group-active:translate-y-0 motion-safe:group-focus-visible:-translate-y-0.5"
           >
             {item.label}
             <ArrowUpRight
               data-icon="inline-end"
               aria-hidden="true"
-              className="opacity-0 transition-all duration-200 group-hover:opacity-100 group-focus-visible:opacity-100 motion-safe:-translate-x-0.5 motion-safe:translate-y-0.5 motion-safe:group-hover:translate-x-0 motion-safe:group-hover:translate-y-0 motion-safe:group-focus-visible:translate-x-0 motion-safe:group-focus-visible:translate-y-0"
+              class="opacity-0 transition-all duration-200 group-hover:opacity-100 group-focus-visible:opacity-100 motion-safe:-translate-x-0.5 motion-safe:translate-y-0.5 motion-safe:group-hover:translate-x-0 motion-safe:group-hover:translate-y-0 motion-safe:group-focus-visible:translate-x-0 motion-safe:group-focus-visible:translate-y-0"
             />
           </Badge>
         </a>
