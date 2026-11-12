@@ -24,7 +24,7 @@ Writing lives as Markdown files committed to this repository and is built by Ast
 
 ## Capabilities and Constraints
 
-- Astro 7 with React 19 islands, Tailwind CSS 4, shadcn/ui components (Base UI, `base-nova` style, neutral base color), `lucide-react` icons, Satoshi Variable (Fontshare) as the loaded sans face, and Caveat Variable for the `font-signature` wordmark.
+- Astro 7 with Svelte 5 islands, Tailwind CSS 4, shadcn-svelte components (Bits UI, neutral base color), `@lucide/svelte` icons, Satoshi Variable (Fontshare) as the loaded sans face, and Caveat Variable for the `font-signature` wordmark.
 - Static-first output served as Cloudflare Worker assets; no confirmed server-side runtime features beyond wrangler asset hosting.
 - Confirmed visitor capabilities, all currently unimplemented: read posts, browse projects, use small browser tools, contact mihidana, and learn who mihidana is (about).
 - Publishing mechanism is Markdown in the repo; post structure (taxonomy, drafts, feeds) is not yet decided.
