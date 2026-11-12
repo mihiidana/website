@@ -23,15 +23,24 @@ Requires Node `>=26.13.0` and pnpm `12.18.0` (`packageManager`).
 /
 ├── public/               # favicons, PWA icons, site.webmanifest, _headers
 ├── src
-│   ├── components/       # astro components; ui/ holds shadcn primitives,
-│   │                     # widgets/ the React islands, seo/ the head metadata
+│   ├── components/
+│   │   ├── layouts/      # Layout.astro (head, theme bootstrap, chrome),
+│   │   │                 # header, footer, container, mode-toggle
+│   │   ├── sections/     # composed page sections driven by site.ts
+│   │   ├── widgets/      # React islands (clock, led-matrix, music-player)
+│   │   ├── ui/           # shadcn primitives (button, card, badge, slider)
+│   │   └── seo/          # head.astro: title, canonical, OG, Twitter
 │   ├── lib/              # site.ts (identity + copy), theme.ts, utils.ts (cn)
-│   ├── pages/            # file-based routes
-│   ├── styles/           # global.css: Tailwind, shadcn tokens, fonts
-│   └── tests → tests/    # tests/unit (vitest), tests/e2e (playwright)
+│   ├── pages/            # file-based routes (index.astro)
+│   └── styles/           # global.css: Tailwind, shadcn tokens, fonts
+├── tests
+│   ├── unit/             # vitest: shared theme constants
+│   └── e2e/              # Playwright: smoke, a11y, CSP, theme, SEO, links
 ├── components.json       # shadcn config
 ├── wrangler.jsonc        # Cloudflare Worker name and dist/ assets
-└── astro.config.mjs      # includes site URL and the CSP configuration
+├── astro.config.mjs      # site URL and CSP configuration
+├── playwright.config.ts  # E2E runs against the production build
+└── vitest.config.ts      # unit tests via Astro's getViteConfig
 ```
 
 Site identity, description, socials, and page copy are centralized in
@@ -61,10 +70,11 @@ All commands run from the project root:
 | `pnpm deploy`    | Build and deploy to Cloudflare Workers                 |
 | `pnpm astro ...` | Run Astro CLI commands                                 |
 
-`pnpm validate` (lint, typecheck, unit tests, build, E2E) runs on every push and
-pull request to `main`. The `deploy` job runs `pnpm deploy` on pushes to `main`
-and only starts after CI passes; it requires the `CLOUDFLARE_API_TOKEN` and
-`CLOUDFLARE_ACCOUNT_ID` secrets; see [`.env.example`](./.env.example) for the
-variable names.
+`pnpm validate` (lint, typecheck, unit tests, build, E2E) mirrors what CI runs on
+every push and pull request to `main`: the workflow executes the same checks as
+separate steps (installing the Playwright browser before E2E). The `deploy` job
+runs `pnpm deploy` on pushes to `main` and only starts after CI passes; it
+requires the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` secrets; see
+[`.env.example`](./.env.example) for the variable names.
 
 To deploy locally, run `wrangler login` once, then `pnpm deploy`.
