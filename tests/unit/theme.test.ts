@@ -1,23 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveTheme, THEME_COLORS, THEME_STORAGE_KEY } from "@/lib/theme";
+import { THEME_COLORS, THEME_STORAGE_KEY } from "@/lib/theme";
 
-describe("resolveTheme", () => {
-  it("returns the persisted theme when it is valid", () => {
-    expect(resolveTheme("light")).toBe("light");
-    expect(resolveTheme("dark")).toBe("dark");
-  });
-
-  it("falls back to the dark default for missing or unknown values", () => {
-    expect(resolveTheme(null)).toBe("dark");
-    expect(resolveTheme(undefined)).toBe("dark");
-    expect(resolveTheme("")).toBe("dark");
-    expect(resolveTheme("system")).toBe("dark");
-  });
-});
-
+// These constants are interpolated into the pre-paint bootstrap in
+// Layout.astro. The bootstrap's runtime behavior (valid, invalid, missing,
+// and blocked storage) is covered end-to-end in tests/e2e/theme.spec.ts.
 describe("theme constants", () => {
   it("provides a browser-chrome color for every theme", () => {
+    expect(Object.keys(THEME_COLORS).sort()).toEqual(["dark", "light"]);
     for (const color of Object.values(THEME_COLORS)) {
       expect(color).toMatch(/^#[0-9a-f]{6}$/);
     }
