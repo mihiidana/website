@@ -29,28 +29,69 @@ for (const path of PAGES) {
     });
 
     test("ships a hash-based CSP with no violations", async ({ page }) => {
-      const violations: string[] = [];
-      await page.exposeFunction("reportCspViolation", (violation: string) => {
-        violations.push(violation);
-      });
+      // Collect violations inside the page (the event fires as a browser task,
+      // so read them after interactions instead of polling a Node-side array).
       await page.addInitScript(() => {
+        const scope = window as typeof window & { __cspViolations: string[] };
+        scope.__cspViolations = [];
+        // Seed a persisted theme so the pre-paint bootstrap has work to do.
+        try {
+          localStorage.setItem("theme", "light");
+        } catch {
+          // Blocked storage is covered by tests/e2e/theme.spec.ts.
+        }
         document.addEventListener("securitypolicyviolation", (event) => {
-          (window as unknown as { reportCspViolation: (v: string) => void }).reportCspViolation(
+          scope.__cspViolations.push(
             `${event.violatedDirective} blocked ${event.blockedURI || "inline"}`,
           );
         });
       });
 
       await page.goto(path);
+
       const csp = await page
         .locator('meta[http-equiv="content-security-policy"]')
         .getAttribute("content");
       expect(csp).toMatch(/script-src 'self'/);
       expect(csp).toMatch(/'sha256-/);
       expect(csp).not.toMatch(/script-src[^;]*'unsafe-inline'/);
+      // Fallback policy and form-post restriction.
+      expect(csp).toMatch(/default-src 'self'/);
+      expect(csp).toMatch(/form-action 'self'/);
+      // Explicit directives must still override the default.
+      expect(csp).toMatch(/object-src 'none'/);
+      expect(csp).toMatch(/base-uri 'self'/);
+      expect(csp).toMatch(/img-src 'self' data:/);
+      expect(csp).toMatch(/media-src 'self'/);
+      expect(csp).toMatch(/connect-src 'self'/);
+      expect(csp).toMatch(/frame-src 'none'/);
+      // Base UI renders style="" attributes; the exception is scoped to them.
+      expect(csp).toMatch(/style-src-attr 'unsafe-inline'/);
+      // The policy is only enforced where the browser supports it; the
+      // response-header layer (public/_headers) adds X-Frame-Options.
 
-      // Exercise the theme toggle so runtime violations surface too.
+      // The inline theme bootstrap must run: the server HTML is dark, so a
+      // light page proves the bootstrap executed and applied the stored value.
+      await expect(page.locator("html")).not.toHaveClass(/dark/);
+      await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#ffffff");
+
+      // The bundled theme toggle must run.
       await page.getByRole("button", { name: "Toggle color theme" }).click();
+      await expect(page.locator("html")).toHaveClass(/dark/);
+
+      // Exercise the Base UI slider (prehydration script + island) under CSP.
+      const slider = page.getByRole("slider", { name: /Volume for/ });
+      await expect(slider).toBeVisible();
+      await slider.focus();
+      await page.keyboard.press("ArrowRight");
+      await expect
+        .poll(() => page.evaluate(() => document.querySelector("audio")?.volume))
+        .toBeGreaterThan(0.5);
+
+      // Violations are recorded in the page; read them after the interactions.
+      const violations = await page.evaluate(
+        () => (window as typeof window & { __cspViolations: string[] }).__cspViolations,
+      );
       expect(violations).toEqual([]);
     });
 
