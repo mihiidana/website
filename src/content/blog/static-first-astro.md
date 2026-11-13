@@ -1,6 +1,6 @@
 ---
 
-title: A Practical Mental Model for Static-First Websites with Astro
+title: A Mental Model for Static-First Astro Websites
 description: What static rendering actually means in Astro, where the boundary between build time and the browser sits, and how islands keep JavaScript honest.
 pubDate: 2026-11-13
 ---

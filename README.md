@@ -80,9 +80,18 @@ Every public page renders through `Layout.astro` with explicit page metadata.
 `src/lib/seo.ts` composes the document title, absolute canonical URL, Open Graph
 and Twitter tags, locale, and route-derived social image, while
 `src/lib/seo/jsonld.ts` builds a `Person`/`WebSite`/`WebPage`/`BlogPosting`
-structured-data graph from the same data. `robots.txt` and the web manifest are
-generated from `site.ts`; `@astrojs/sitemap` emits only indexable pages. A page
-marked `noindex` must also be registered in `site.seo.noindexRoutes`.
+structured-data graph from the same data. The homepage uses
+`site.pages.home.seoTitle` and the site description; the archive uses
+`site.writing.seoTitle`, so neither falls back to a bare site name. `robots.txt`
+and the web manifest are generated from `site.ts`; `@astrojs/sitemap` emits only
+indexable pages. A page marked `noindex` must also be registered in
+`site.seo.noindexRoutes`.
+
+`pnpm check:seo` also reports metadata-length warnings (titles outside 30–70
+characters, descriptions outside 80–200) with the route and current length.
+They are editorial guidance, not build failures; the target is roughly 50–60
+characters for titles and 110–160 for descriptions. An intentional exception
+lives in `site.seo.metadataExceptions` with a required reason.
 
 Every indexable page also gets a generated 1200×630 social image at build time
 (`/og/home.png`, `/og/blog.png`, `/og/blog/<slug>.png`), rendered by Satori from

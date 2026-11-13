@@ -33,6 +33,15 @@ function meta(html: string, key: string): string | undefined {
   return byProperty ?? html.match(new RegExp(`<meta name="${key}" content="([^"]*)"`))?.[1];
 }
 
+function decodeHtml(value: string): string {
+  return value
+    .replaceAll("&amp;", "&")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&#39;", "'")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">");
+}
+
 function jsonLd(html: string): { "@graph": Record<string, unknown>[] } {
   const payload = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)?.[1];
   expect(payload, "JSON-LD script").toBeTruthy();
@@ -132,4 +141,31 @@ test("article pages carry BlogPosting data with real dates and a breadcrumb trai
       page.route,
     ).toBe(true);
   }
+});
+
+test("the homepage ships descriptive metadata instead of a bare site name", async () => {
+  const page = pages.find((entry) => entry.route === "/");
+  expect(page).toBeDefined();
+
+  const title = decodeHtml(page?.html.match(/<title>([^<]*)<\/title>/)?.[1] ?? "");
+  const description = meta(page?.html ?? "", "description");
+
+  expect(title).toBe(`${site.pages.home.seoTitle} — ${site.name}`);
+  expect(description).toBe(site.description);
+  expect(title?.match(/mihidana/g)).toHaveLength(1);
+  expect(description?.length).toBeGreaterThanOrEqual(110);
+  expect(description?.length).toBeLessThanOrEqual(160);
+});
+
+test("the writing archive uses its own descriptive metadata", async () => {
+  const page = pages.find((entry) => entry.route === "/blog/");
+  expect(page).toBeDefined();
+
+  const title = decodeHtml(page?.html.match(/<title>([^<]*)<\/title>/)?.[1] ?? "");
+  const description = meta(page?.html ?? "", "description");
+
+  expect(title).toBe(`${site.writing.seoTitle} — ${site.name}`);
+  expect(description).toBe(site.writing.description);
+  expect(description?.length).toBeGreaterThanOrEqual(110);
+  expect(description?.length).toBeLessThanOrEqual(160);
 });

@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { absoluteUrl, buildPageSeo, normalizeRoute } from "../../src/lib/seo";
 import { buildStructuredData, serializeJsonLd } from "../../src/lib/seo/jsonld";
+import { metadataQualityWarnings } from "../../src/lib/seo/quality";
 import { site } from "../../src/lib/site";
 
 describe("canonical routes", () => {
@@ -46,6 +47,28 @@ describe("page metadata", () => {
   test("does not repeat the site name in its own title", () => {
     const seo = buildPageSeo({ route: "/", title: site.name, description: site.description });
     expect(seo.title).toBe(site.name);
+  });
+
+  test("appends the site name exactly once to a page-specific title", () => {
+    const seo = buildPageSeo({
+      route: "/",
+      title: site.pages.home.seoTitle ?? "",
+      description: site.description,
+    });
+
+    expect(seo.title).toBe(`${site.pages.home.seoTitle} — ${site.name}`);
+    expect(seo.title.match(/mihidana/g)).toHaveLength(1);
+  });
+
+  test("does not append the site name twice when a title already carries it", () => {
+    const seo = buildPageSeo({
+      route: "/blog/",
+      title: `Writing — ${site.name}`,
+      description: site.writing.description,
+    });
+
+    expect(seo.title).toBe(`Writing — ${site.name}`);
+    expect(seo.title.match(/mihidana/g)).toHaveLength(1);
   });
 
   test("noindex pages omit social images and use a summary card", () => {
@@ -125,5 +148,61 @@ describe("structured data", () => {
     expect(payload).not.toContain("</script>");
     expect(payload).toContain("\\u003c");
     expect(JSON.parse(payload).value).toBe("</script><script>alert(1)</script>");
+  });
+});
+
+describe("metadata quality", () => {
+  const titled = (title: string) => ({ route: "/page/", title, description: "x".repeat(120) });
+  const described = (description: string) => ({
+    route: "/page/",
+    title: "A descriptive page title that is long enough",
+    description,
+  });
+
+  test("flags titles and descriptions below the useful range", () => {
+    expect(metadataQualityWarnings([titled("Too short")])[0]).toMatchObject({
+      route: "/page/",
+      field: "title",
+      length: 9,
+    });
+    expect(metadataQualityWarnings([described("Too short.")])[0]).toMatchObject({
+      route: "/page/",
+      field: "description",
+      length: 10,
+    });
+  });
+
+  test("flags titles and descriptions that will be truncated", () => {
+    expect(metadataQualityWarnings([titled("t".repeat(71))])[0]).toMatchObject({
+      field: "title",
+      length: 71,
+    });
+    expect(metadataQualityWarnings([described("d".repeat(201))])[0]).toMatchObject({
+      field: "description",
+      length: 201,
+    });
+  });
+
+  test("accepts copy near the editorial target without warning", () => {
+    expect(
+      metadataQualityWarnings([
+        {
+          route: "/page/",
+          title: "A descriptive page title for testing",
+          description:
+            "A description with enough context to explain what this page contains and why a reader should continue.",
+        },
+      ]),
+    ).toEqual([]);
+  });
+
+  test("an exception with a reason suppresses only its field", () => {
+    const warnings = metadataQualityWarnings(
+      [{ route: "/page/", title: "Short", description: "Also short." }],
+      [{ route: "/page/", field: "title", reason: "Brand name is deliberately terse." }],
+    );
+
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toMatchObject({ field: "description" });
   });
 });

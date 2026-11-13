@@ -17,12 +17,15 @@ export function seoCheck(): AstroIntegration {
     name: "seo-check",
     hooks: {
       "astro:build:done": async ({ dir, logger }) => {
-        const { pages, images, sitemapUrls } = await verifySeo({
+        const { pages, images, sitemapUrls, warnings } = await verifySeo({
           distDir: fileURLToPath(dir),
         });
         logger.info(
           `verified SEO for ${pages} pages, ${images} social images, ${sitemapUrls} sitemap URLs`,
         );
+        for (const warning of warnings) {
+          logger.warn(`${warning.route}: ${warning.message}`);
+        }
       },
     },
   };

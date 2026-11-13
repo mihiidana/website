@@ -108,7 +108,13 @@ export function absoluteUrl(route: string): string {
 export function buildPageSeo(input: PageSeoInput): PageSeo {
   const route = normalizeRoute(input.route);
   const canonical = absoluteUrl(route);
-  const pageTitle = input.title === site.name ? site.name : `${input.title} — ${site.name}`;
+  const siteSuffix = ` — ${site.name}`;
+  // `title` is the page's own base title. The site name is appended once; a page
+  // that already includes it (or *is* it) cannot produce a doubled suffix.
+  const pageTitle =
+    input.title === site.name || input.title.endsWith(siteSuffix)
+      ? input.title
+      : `${input.title}${siteSuffix}`;
   const noindex = input.noindex === true;
   const twitterCard = noindex ? "summary" : site.seo.twitterCard;
 

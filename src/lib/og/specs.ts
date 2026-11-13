@@ -41,17 +41,16 @@ const BLOG_ROUTE = "/blog/";
  * content cannot drift apart.
  */
 export function staticOgSpecs(): OgSpec[] {
-  const home = site.pages.home;
-
   return [
     {
       route: HOME_ROUTE,
       kind: "home",
       eyebrow: "Personal site",
-      // The homepage h1 is "Hello!"; the social card leads with the identity
-      // instead, matching the <title> the page already ships.
+      // The homepage h1 is "Hello!" and its document title is descriptive. The
+      // card leads with the identity instead, which reads better at display
+      // size; the description matches the page's actual meta description.
       title: site.name,
-      description: home.intro,
+      description: site.description,
       meta: [site.socials.github.replace(/^https?:\/\//, "")],
     },
     {

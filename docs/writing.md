@@ -59,6 +59,14 @@ draft: false # optional, defaults to false
 | `updatedDate` | no       | date   | Shown in the header and in structured data.       |
 | `draft`       | no       | bool   | `true` keeps the post out of every surface.       |
 
+Keep titles descriptive and descriptions useful on their own. The document
+title adds the site name (` — mihidana`), so aim for roughly 50–60 characters
+in total, about 40–50 in frontmatter. Descriptions read best around 110–160
+characters. `pnpm check:seo` warns — without failing the build — when a title
+falls below 30 or above 70 characters, or a description below 80 or above 200.
+An intentional exception belongs in `site.seo.metadataExceptions` with a
+reason; correctness checks still apply.
+
 Dates are read as UTC. A malformed date, a missing field, or an unknown type
 fails the build, which is the point: a broken post never deploys.
 

@@ -20,6 +20,7 @@ import sharp from "sharp";
 import { OG_HEIGHT, OG_WIDTH } from "../og/constants.ts";
 import { ogImagePath } from "../og/paths.ts";
 import { site } from "../site.ts";
+import { type MetadataQualityWarning, metadataQualityWarnings } from "./quality.ts";
 
 type Element = DefaultTreeAdapterTypes.Element;
 type Node = DefaultTreeAdapterTypes.Node;
@@ -49,6 +50,8 @@ export type SeoVerifyResult = {
   pages: number;
   images: number;
   sitemapUrls: number;
+  /** Editorial length warnings. These do not fail the build. */
+  warnings: MetadataQualityWarning[];
 };
 
 function walk(nodes: readonly Node[], visit: (element: Element) => void): void {
@@ -146,6 +149,13 @@ function parsePage(html: string, htmlPath: string, distDir: string): ParsedPage 
 
 function first(values: string[] | undefined): string | undefined {
   return values?.[0];
+}
+
+/** The `@id` of a JSON-LD reference object (`{ "@id": "…" }`). */
+function refId(value: unknown): string | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const id = (value as Record<string, unknown>)["@id"];
+  return typeof id === "string" ? id : undefined;
 }
 
 function ogTypeIsArticle(page: ParsedPage): boolean {
@@ -554,9 +564,37 @@ export async function verifySeo({ distDir }: { distDir: string }): Promise<SeoVe
 
     // Structured data is required on every page, indexable or not.
     const nodes = collectJsonLd(page, addPage);
+    const person = nodes.find((node) => node["@type"] === "Person");
     const website = nodes.find((node) => node["@type"] === "WebSite");
-    if (!website) addPage("JSON-LD is missing a WebSite node");
-    else if (website.url !== SITE_ROOT) addPage("WebSite.url is not the production root");
+    const personId = person?.["@id"];
+    const websiteId = website?.["@id"];
+
+    if (!person) {
+      addPage("JSON-LD is missing a Person node");
+    } else {
+      if (person.url !== SITE_ROOT) addPage("Person.url is not the production root");
+      if (person.sameAs !== undefined) {
+        const sameAs = person.sameAs;
+        if (
+          !Array.isArray(sameAs) ||
+          sameAs.some((value) => typeof value !== "string" || !/^https:\/\//i.test(value))
+        ) {
+          addPage("Person.sameAs must contain absolute https profile URLs");
+        }
+      }
+    }
+
+    if (!website) {
+      addPage("JSON-LD is missing a WebSite node");
+    } else {
+      if (website.url !== SITE_ROOT) addPage("WebSite.url is not the production root");
+      if (website.description !== site.description) {
+        addPage("WebSite.description does not match site.description");
+      }
+      if (websiteId && refId(website.publisher) !== personId) {
+        addPage("WebSite.publisher does not reference the Person node");
+      }
+    }
 
     const pageNodes = nodes.filter((node) =>
       ["WebPage", "CollectionPage", "ProfilePage", "AboutPage", "ItemPage"].includes(
@@ -565,7 +603,20 @@ export async function verifySeo({ distDir }: { distDir: string }): Promise<SeoVe
     );
     if (pageNodes.length === 0) addPage("JSON-LD is missing a WebPage node");
     const currentPage = pageNodes.find((node) => node.url === canonical);
-    if (!currentPage) addPage("JSON-LD has no WebPage whose url matches the canonical");
+    if (!currentPage) {
+      addPage("JSON-LD has no WebPage whose url matches the canonical");
+    } else {
+      if (title && currentPage.name !== title) addPage("WebPage.name does not match <title>");
+      if (description && currentPage.description !== description) {
+        addPage("WebPage.description does not match meta description");
+      }
+      if (websiteId && refId(currentPage.isPartOf) !== websiteId) {
+        addPage("WebPage.isPartOf does not reference the WebSite node");
+      }
+      if (route === "/" && personId && refId(currentPage.about) !== personId) {
+        addPage("homepage WebPage.about does not reference the Person node");
+      }
+    }
 
     if (ogTypeIsArticle(page)) {
       const article = nodes.find((node) => node["@type"] === "BlogPosting");
@@ -581,12 +632,32 @@ export async function verifySeo({ distDir }: { distDir: string }): Promise<SeoVe
           addPage("BlogPosting.headline does not match the page title");
         }
         if (article.url !== canonical) addPage("BlogPosting.url does not match canonical");
+        if (description && article.description !== description) {
+          addPage("BlogPosting.description does not match meta description");
+        }
+        if (personId && refId(article.author) !== personId) {
+          addPage("BlogPosting.author does not reference the Person node");
+        }
+        if (personId && refId(article.publisher) !== personId) {
+          addPage("BlogPosting.publisher does not reference the Person node");
+        }
+        if (websiteId && refId(article.isPartOf) !== websiteId) {
+          addPage("BlogPosting.isPartOf does not reference the WebSite node");
+        }
         if (typeof article.datePublished !== "string" || !isIsoDate(article.datePublished)) {
           addPage("BlogPosting.datePublished is missing or invalid");
+        }
+        const published = first(page.metas.get("article:published_time"));
+        if (published && article.datePublished !== published) {
+          addPage("BlogPosting.datePublished does not match article:published_time");
         }
         if (article.dateModified !== undefined) {
           if (typeof article.dateModified !== "string" || !isIsoDate(article.dateModified)) {
             addPage("BlogPosting.dateModified is invalid");
+          }
+          const modified = first(page.metas.get("article:modified_time"));
+          if (modified && article.dateModified !== modified) {
+            addPage("BlogPosting.dateModified does not match article:modified_time");
           }
         }
         const image = first(page.metas.get("og:image"));
@@ -597,12 +668,50 @@ export async function verifySeo({ distDir }: { distDir: string }): Promise<SeoVe
       }
     }
 
+    if (currentPage?.["@type"] === "CollectionPage") {
+      const list = nodes.find((node) => node["@type"] === "ItemList");
+      if (!list) {
+        addPage("CollectionPage is missing ItemList structured data");
+      } else {
+        const entries = Array.isArray(list.itemListElement)
+          ? (list.itemListElement as Record<string, unknown>[])
+          : [];
+        if (list.numberOfItems !== entries.length) {
+          addPage(
+            `ItemList.numberOfItems is ${String(list.numberOfItems)}, but it lists ${entries.length}`,
+          );
+        }
+        entries.forEach((entry, index) => {
+          if (entry.position !== index + 1) {
+            addPage(`ItemList entry ${index + 1} has position ${String(entry.position)}`);
+          }
+          const url = entry.url;
+          if (typeof url !== "string") {
+            addPage("ItemList entry is missing a url");
+          } else if (!sitemapSet.has(url)) {
+            addPage(`ItemList entry ${url} is not an indexable page in the sitemap`);
+          }
+        });
+        if (refId(currentPage.mainEntity) !== list["@id"]) {
+          addPage("CollectionPage.mainEntity does not reference the ItemList");
+        }
+      }
+    }
+
     if (route !== "/" && !noindex) {
       const breadcrumbs = nodes.find((node) => node["@type"] === "BreadcrumbList");
       if (!breadcrumbs) {
         addPage("sub-page is missing BreadcrumbList structured data");
       } else if (Array.isArray(breadcrumbs.itemListElement)) {
         const items = breadcrumbs.itemListElement as Record<string, unknown>[];
+        items.forEach((item, index) => {
+          if (item.position !== index + 1) {
+            addPage(`BreadcrumbList entry ${index + 1} has position ${String(item.position)}`);
+          }
+          if (typeof item.item !== "string" || !item.item.startsWith(`${ORIGIN}/`)) {
+            addPage("BreadcrumbList item is not a production URL");
+          }
+        });
         const last = items.at(-1);
         if (last?.item !== canonical) {
           addPage("BreadcrumbList does not end at this page's canonical URL");
@@ -701,6 +810,35 @@ export async function verifySeo({ distDir }: { distDir: string }): Promise<SeoVe
     const robots = first(page.metas.get("robots"))?.toLowerCase() ?? "";
     return !robots.includes("noindex");
   });
+  const indexableRoutes = new Set(indexable.map((page) => page.route));
+
+  // Editorial length checks are warnings, not failures. An exception must name
+  // an indexable route, a real field, and a reason; otherwise it is a config
+  // error and fails the build like any other contract violation.
+  const metadataExceptions = site.seo.metadataExceptions.map((exception) => ({
+    ...exception,
+    route: normalizeRoute(exception.route),
+  }));
+  for (const exception of metadataExceptions) {
+    if (!exception.reason.trim()) {
+      add("/seo", `metadata exception for ${exception.route} (${exception.field}) has no reason`);
+    }
+    if (!indexableRoutes.has(exception.route)) {
+      add(
+        "/seo",
+        `metadata exception names ${exception.route}, but no indexable page was built there`,
+      );
+    }
+  }
+  const warnings = metadataQualityWarnings(
+    indexable.map((page) => ({
+      route: page.route,
+      title: first(page.title) ?? "",
+      description: first(page.metas.get("description")) ?? "",
+    })),
+    metadataExceptions,
+  );
+
   const expectedSitemap = new Set(indexable.map((page) => canonicalFor(page.route)));
 
   const sitemapSeen = new Set<string>();
@@ -783,5 +921,5 @@ export async function verifySeo({ distDir }: { distDir: string }): Promise<SeoVe
     );
   }
 
-  return { pages: pages.length, images: emitted.size, sitemapUrls: sitemap.urls.length };
+  return { pages: pages.length, images: emitted.size, sitemapUrls: sitemap.urls.length, warnings };
 }

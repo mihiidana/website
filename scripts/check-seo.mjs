@@ -10,7 +10,19 @@ import { verifySeo } from "../src/lib/seo/verify.ts";
 const distDir = fileURLToPath(new URL("../dist/", import.meta.url));
 
 try {
-  const { pages, images, sitemapUrls } = await verifySeo({ distDir });
+  const { pages, images, sitemapUrls, warnings } = await verifySeo({ distDir });
+
+  for (const warning of warnings) {
+    console.warn(`${warning.route}\n  - ${warning.message}`);
+  }
+  if (warnings.length > 0) {
+    console.warn(
+      `\n${warnings.length} metadata length warning${warnings.length === 1 ? "" : "s"}. ` +
+        "These do not fail the build; improve the copy or register an exception in " +
+        "site.seo.metadataExceptions with a reason.",
+    );
+  }
+
   console.log(
     `SEO check passed: ${pages} page${pages === 1 ? "" : "s"}, ` +
       `${images} social image${images === 1 ? "" : "s"}, ` +

@@ -1,7 +1,7 @@
 ---
 
-title: Design Tokens That Stay Small, Consistent, and Useful
-description: Primitive and semantic tokens, theme architecture with CSS custom properties, and how to wire tokens into Tailwind CSS 4 without building a second design system.
+title: Design Tokens That Stay Small and Consistent
+description: Primitive and semantic tokens, theme architecture with CSS custom properties, and how to wire tokens into Tailwind CSS 4 without rebuilding your design system.
 pubDate: 2026-11-13
 ---
 
