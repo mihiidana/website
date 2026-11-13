@@ -2,12 +2,15 @@
 /**
  * Page head metadata: title, description, canonical URL, Open Graph, and
  * Twitter Card. Titles compose with the site name; copy comes from props
- * (which pages source from `site.ts`) — never invent content here.
+ * (which pages source from `site.ts` or the content collection) — never
+ * invent content here.
  *
- * `type`, `publishedTime`, `modifiedTime`, and `image` exist for articles.
- * `image` is optional so per-article social images can be added later
- * without reshaping this component; nothing generates images yet.
+ * Every page gets its own generated social image by default: the path is
+ * derived from the page's own route (`src/lib/og/paths.ts`), which is exactly
+ * the path `/og/[...path].png` writes at build time. `image` overrides that for
+ * cases where a hand-made asset is genuinely better; `imageAlt` accompanies it.
  */
+import { ogImageAlt, ogImagePath } from "@/lib/og/paths";
 import { site } from "@/lib/site";
 
 interface Props {
@@ -19,8 +22,10 @@ interface Props {
   publishedTime?: string;
   /** ISO date of the last edit (articles only). */
   modifiedTime?: string;
-  /** Absolute or root-relative social image URL. */
+  /** Absolute or root-relative social image URL; defaults to this page's generated card. */
   image?: string;
+  /** Alt text for a custom `image`; ignored for generated cards. */
+  imageAlt?: string;
 }
 
 const {
@@ -30,10 +35,13 @@ const {
   publishedTime,
   modifiedTime,
   image,
+  imageAlt,
 } = Astro.props;
+
 const pageTitle = title === site.name ? site.name : `${title} — ${site.name}`;
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site).href;
-const imageUrl = image ? new URL(image, Astro.site).href : undefined;
+const socialImage = new URL(image ?? ogImagePath(Astro.url.pathname), Astro.site).href;
+const socialImageAlt = imageAlt ?? ogImageAlt({ title: pageTitle, description });
 ---
 
 <!-- Primary -->
@@ -50,10 +58,15 @@ const imageUrl = image ? new URL(image, Astro.site).href : undefined;
 <meta property="og:site_name" content={site.name}>
 {publishedTime && <meta property="article:published_time" content={publishedTime}>}
 {modifiedTime && <meta property="article:modified_time" content={modifiedTime}>}
-{imageUrl && <meta property="og:image" content={imageUrl}>}
+<meta property="og:image" content={socialImage}>
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:alt" content={socialImageAlt}>
 
 <!-- Twitter -->
-<meta name="twitter:card" content={imageUrl ? "summary_large_image" : "summary"}>
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content={pageTitle}>
 <meta name="twitter:description" content={description}>
-{imageUrl && <meta name="twitter:image" content={imageUrl}>}
+<meta name="twitter:image" content={socialImage}>
+<meta name="twitter:image:alt" content={socialImageAlt}>

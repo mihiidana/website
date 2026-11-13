@@ -5,13 +5,14 @@ CMS, no database, and no preview service: write a file, commit, build, deploy.
 
 ## Where writing appears
 
-| Surface                      | What it shows                                                                            |
-| ---------------------------- | ---------------------------------------------------------------------------------------- |
-| Homepage **Writing** section | The four newest published posts (`recentPosts()` in `src/lib/blog.ts`).                  |
-| `/blog/`                     | The full archive, newest first.                                                          |
-| `/rss.xml`                   | Every published post.                                                                    |
-| Sitemap                      | Every published post.                                                                    |
-| Header                       | **Nothing.** There is deliberately no nav link; the homepage section is the entry point. |
+| Surface                      | What it shows                                                                                                 |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Homepage **Writing** section | The four newest published posts (`recentPosts()` in `src/lib/blog.ts`).                                       |
+| `/blog/`                     | The full archive, newest first.                                                                               |
+| `/rss.xml`                   | Every published post.                                                                                         |
+| Sitemap                      | Every published post.                                                                                         |
+| Header                       | **Nothing.** There is deliberately no nav link; the homepage section is the entry point.                      |
+| Social cards                 | One 1200×630 PNG per post, generated from its `title`, `description`, and `pubDate` at `/og/blog/<slug>.png`. |
 
 The homepage slices the same filtered, sorted list the archive uses, so a draft
 can never appear there and the order can never disagree. With no published
@@ -60,6 +61,24 @@ draft: false # optional, defaults to false
 
 Dates are read as UTC. A malformed date, a missing field, or an unknown type
 fails the build, which is the point: a broken post never deploys.
+
+## Social images
+
+Every post gets its own Open Graph card during `astro build`. Nothing to do:
+the title and description you already wrote become the card, and the image URL
+is derived from the post's own path.
+
+- Output: `/og/blog/<slug>.png` (nested slugs stay nested), 1200×630, PNG.
+- Content: `title`, `description`, and the publication date — read from the
+  collection entry, never duplicated by hand.
+- Metadata: `og:image`, `og:image:alt`, `twitter:image`, and
+  `twitter:card=summary_large_image` are emitted by `src/components/seo/head.astro`.
+- Long titles step down in size and are cut at a word boundary; long
+  descriptions are trimmed to two or three lines rather than clipped mid-word.
+
+If a post ever needs a hand-made image, pass `image` (and optionally `imageAlt`)
+to `<Layout>` in `src/pages/blog/[...slug].astro`. The build gate then verifies
+the referenced file exists and is 1200×630. See AGENTS.md → Open Graph images.
 
 ## Markdown or MDX?
 

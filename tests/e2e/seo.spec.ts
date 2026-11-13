@@ -23,7 +23,22 @@ test("the homepage exposes canonical and social metadata", async ({ page }) => {
   await expect(page.locator('meta[property="og:url"]')).toHaveAttribute("content", `${site.url}/`);
   await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute("content", site.name);
 
-  await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary");
+  await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(
+    "content",
+    "summary_large_image",
+  );
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+    "content",
+    `${site.url}/og/home.png`,
+  );
+  await expect(page.locator('meta[property="og:image:alt"]')).toHaveAttribute(
+    "content",
+    /^mihidana\. /,
+  );
+  await expect(page.locator('meta[name="twitter:image"]')).toHaveAttribute(
+    "content",
+    `${site.url}/og/home.png`,
+  );
   await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute("content", site.name);
   await expect(page.locator('meta[name="twitter:description"]')).toHaveAttribute(
     "content",

@@ -16,7 +16,10 @@ interface Props {
   type?: "website" | "article";
   publishedTime?: string;
   modifiedTime?: string;
+  /** Custom social image; defaults to this page's generated card. */
   image?: string;
+  /** Alt text for a custom `image`. */
+  imageAlt?: string;
 }
 
 const {
@@ -26,6 +29,7 @@ const {
   publishedTime,
   modifiedTime,
   image,
+  imageAlt,
 } = Astro.props;
 
 // Pre-paint theme bootstrap: applies the persisted (or default dark) theme
@@ -79,6 +83,7 @@ Astro.csp?.insertScriptHash(`sha256-${bootstrapHash}`);
       publishedTime={publishedTime}
       modifiedTime={modifiedTime}
       image={image}
+      imageAlt={imageAlt}
     />
     <script is:inline set:html={themeBootstrap} />
     <Font cssVariable="--font-satoshi" preload />

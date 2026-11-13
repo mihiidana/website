@@ -9,6 +9,7 @@ import { defineConfig, fontProviders } from "astro/config";
 
 import { articleImageSizesPlugin } from "./src/lib/article-image-sizes";
 import { headingPermalinksPlugin } from "./src/lib/heading-permalinks";
+import { ogImageCheck } from "./src/lib/og/integration";
 import { remoteImages } from "./src/lib/remote-images";
 import { site } from "./src/lib/site";
 
@@ -59,7 +60,7 @@ export default defineConfig({
 
   // `remoteImages()` must run before `mdx()` resolves the Markdown processor
   // at `astro:config:done`, so it is listed first. See src/lib/remote-images.ts.
-  integrations: [remoteImages(), svelte(), mdx(), sitemap()],
+  integrations: [remoteImages(), svelte(), mdx(), sitemap(), ogImageCheck()],
 
   markdown: {
     // Astro 7's default Markdown processor is Sätteri; naming it here is what
@@ -141,6 +142,19 @@ export default defineConfig({
       provider: fontProviders.fontshare(),
       weights: ["300 900"],
       styles: ["normal", "italic"],
+      subsets: ["latin"],
+      fallbacks: ["sans-serif"],
+    },
+    {
+      // Social images render through Satori, which draws a variable font at its
+      // default instance only — `fontWeight` would be ignored and every card
+      // would use one weight. This family exists so OG images get real 400 and
+      // 700 instances; the site itself keeps the variable face above.
+      name: "Satoshi",
+      cssVariable: "--font-og-satoshi",
+      provider: fontProviders.fontshare(),
+      weights: ["400", "700"],
+      styles: ["normal"],
       subsets: ["latin"],
       fallbacks: ["sans-serif"],
     },
