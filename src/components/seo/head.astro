@@ -5,10 +5,11 @@
  * (which pages source from `site.ts` or the content collection) — never
  * invent content here.
  *
- * Every page gets its own generated social image by default: the path is
- * derived from the page's own route (`src/lib/og/paths.ts`), which is exactly
- * the path `/og/[...path].png` writes at build time. `image` overrides that for
- * cases where a hand-made asset is genuinely better; `imageAlt` accompanies it.
+ * Every page gets its own generated social image: the path is derived from the
+ * page's own route (`src/lib/og/paths.ts`), which is exactly the path
+ * `/og/[...path].png` writes at build time. There is no override — a
+ * hand-picked image could not be verified against the build, so it would either
+ * ship unvalidated or fail the gate. See AGENTS.md → Open Graph images.
  */
 import { ogImageAlt, ogImagePath } from "@/lib/og/paths";
 import { site } from "@/lib/site";
@@ -22,10 +23,6 @@ interface Props {
   publishedTime?: string;
   /** ISO date of the last edit (articles only). */
   modifiedTime?: string;
-  /** Absolute or root-relative social image URL; defaults to this page's generated card. */
-  image?: string;
-  /** Alt text for a custom `image`; ignored for generated cards. */
-  imageAlt?: string;
 }
 
 const {
@@ -34,14 +31,12 @@ const {
   type = "website",
   publishedTime,
   modifiedTime,
-  image,
-  imageAlt,
 } = Astro.props;
 
 const pageTitle = title === site.name ? site.name : `${title} — ${site.name}`;
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site).href;
-const socialImage = new URL(image ?? ogImagePath(Astro.url.pathname), Astro.site).href;
-const socialImageAlt = imageAlt ?? ogImageAlt({ title: pageTitle, description });
+const socialImage = new URL(ogImagePath(Astro.url.pathname), Astro.site).href;
+const socialImageAlt = ogImageAlt({ title: pageTitle, description });
 ---
 
 <!-- Primary -->

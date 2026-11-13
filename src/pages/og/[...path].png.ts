@@ -3,7 +3,8 @@
  *
  * One file per public page, emitted by `astro build` (no adapter, no runtime
  * rendering). `getStaticPaths()` reads the same registry the pages read, so the
- * set of images is always exactly the set of routes.
+ * set of images is always exactly the set of routes, and asserts that no two
+ * routes resolve to the same output file.
  *
  * The file name is a pure function of the route (see `src/lib/og/paths.ts`), so
  * a given URL always serves the same page's image; content changes only when
@@ -13,12 +14,14 @@ import { getCollection } from "astro:content";
 import type { APIRoute, GetStaticPaths } from "astro";
 
 import { publishedPosts } from "@/lib/blog";
-import { ogRouteKey } from "@/lib/og/paths";
+import { assertUniqueOgPaths, ogRouteKey } from "@/lib/og/paths";
 import { renderOgImage } from "@/lib/og/render";
 import { ogSpecs } from "@/lib/og/specs";
 
 export const getStaticPaths = (async () => {
   const specs = ogSpecs(publishedPosts(await getCollection("blog")));
+  // Fails here, before any PNG is rendered, if two routes would share a file.
+  assertUniqueOgPaths(specs);
 
   return specs.map((spec) => ({
     params: { path: ogRouteKey(spec.route) },

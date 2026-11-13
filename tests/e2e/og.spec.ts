@@ -128,6 +128,33 @@ test("article cards carry their own title", async () => {
   }
 });
 
+test("every page's image path matches its own route, encoded or not", async () => {
+  // `Astro.url.pathname` is percent-encoded; the registry sees raw collection
+  // IDs. Both must land on one file, and that file must exist on disk.
+  for (const page of pages) {
+    const declared = new URL(meta(page.html, "og:image") ?? "").pathname;
+    const expected = ogImagePath(page.route);
+
+    expect(declared, page.route).toBe(expected);
+    expect(ogImagePath(encodeURI(page.route)), `${page.route} encoded`).toBe(expected);
+
+    const file = new URL(`.${declared}`, DIST);
+    expect((await stat(file)).size, declared).toBeGreaterThan(0);
+  }
+});
+
+test("no page ships an image that is not its own generated card", async () => {
+  // The contract chosen in review: there is no override API. Every page's
+  // social image is the route-derived one under /og/, so the gate can verify
+  // all of them and a hand-made asset can never ship unvalidated.
+  for (const page of pages) {
+    const image = new URL(meta(page.html, "og:image") ?? "");
+    expect(image.origin, page.route).toBe(new URL(site.url).origin);
+    expect(image.pathname, page.route).toBe(ogImagePath(page.route));
+    expect(image.pathname.startsWith("/og/"), page.route).toBe(true);
+  }
+});
+
 test("cards are not byte-identical across pages", async () => {
   // A template that ignores its metadata would still pass every check above.
   const seen = new Set<string>();

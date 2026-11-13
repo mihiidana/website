@@ -7,7 +7,13 @@
  */
 import { describe, expect, test } from "vitest";
 
-import { ogImageAlt, ogImagePath, ogRouteKey, ogSegment } from "../../src/lib/og/paths";
+import {
+  assertUniqueOgPaths,
+  ogImageAlt,
+  ogImagePath,
+  ogRouteKey,
+  ogSegment,
+} from "../../src/lib/og/paths";
 
 describe("og image paths", () => {
   test("maps the root and simple pages by path", () => {
@@ -68,5 +74,78 @@ describe("og image paths", () => {
     expect(alt).not.toMatch(/wor…$/);
 
     expect(ogImageAlt({ title: "T", description: "Short." })).toBe("T. Short.");
+  });
+});
+
+describe("route encoding", () => {
+  /**
+   * The SEO head sees `Astro.url.pathname` (percent-encoded) while the registry
+   * and the endpoint see raw collection IDs. Both must produce one file.
+   */
+  test("raw and percent-encoded routes map to the same image", () => {
+    const pairs: [raw: string, encoded: string][] = [
+      ["/blog/über-café/", "/blog/%C3%BCber-caf%C3%A9/"],
+      ["/blog/hello world/", "/blog/hello%20world/"],
+      ["/blog/日本語/", "/blog/%E6%97%A5%E6%9C%AC%E8%AA%9E/"],
+      ["/blog/naïve résumé/", "/blog/na%C3%AFve%20r%C3%A9sum%C3%A9/"],
+    ];
+
+    for (const [raw, encoded] of pairs) {
+      expect(ogImagePath(encoded), encoded).toBe(ogImagePath(raw));
+    }
+  });
+
+  test("decodes a segment before folding, not the whole path", () => {
+    // A literal `%` survives as a folded character rather than throwing.
+    expect(ogImagePath("/blog/100% real/")).toMatch(/^\/og\/blog\/100-real-[a-z0-9]+\.png$/);
+    // An encoded separator must not create an extra directory level.
+    expect(ogImagePath("/blog/a%2Fb/")).toBe(ogImagePath("/blog/a%2fb/"));
+    expect(ogImagePath("/blog/a%2Fb/").split("/").filter(Boolean)).toHaveLength(3);
+  });
+
+  test("every encoded form stays a valid file name", () => {
+    for (const route of ["/blog/%C3%BCber/", "/blog/a%20b/", "/blog/%E6%97%A5/", "/blog/100%/"]) {
+      expect(ogImagePath(route)).toMatch(/^\/og\/[a-z0-9\-/]+\.png$/);
+    }
+  });
+});
+
+describe("uniqueness invariant", () => {
+  test("accepts a registry of distinct routes", () => {
+    expect(() =>
+      assertUniqueOgPaths([
+        { route: "/" },
+        { route: "/blog/" },
+        { route: "/blog/one/" },
+        { route: "/blog/two/" },
+      ]),
+    ).not.toThrow();
+  });
+
+  test("rejects a route declared twice", () => {
+    expect(() => assertUniqueOgPaths([{ route: "/blog/" }, { route: "/blog/" }])).toThrow(
+      /declared more than once/,
+    );
+  });
+
+  test("rejects two routes that fold to the same file, naming both", () => {
+    // `caf%C3%A9` and `café` are different route strings that decode to the
+    // same segment, so both fold to one file. The assertion is what catches it.
+    const routes = [{ route: "/blog/caf%C3%A9/" }, { route: "/blog/café/" }];
+    expect(() => assertUniqueOgPaths(routes)).toThrow(/both map to/);
+    try {
+      assertUniqueOgPaths(routes);
+    } catch (error) {
+      expect((error as Error).message).toContain("/blog/caf%C3%A9/");
+      expect((error as Error).message).toContain("/blog/café/");
+    }
+  });
+
+  test("encoded and raw spellings of one route collide by design", () => {
+    // Same page, two spellings: the assertion is what stops the build from
+    // generating the card twice.
+    expect(() => assertUniqueOgPaths([{ route: "/blog/a%20b/" }, { route: "/blog/a b/" }])).toThrow(
+      /both map to/,
+    );
   });
 });

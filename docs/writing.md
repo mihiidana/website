@@ -68,7 +68,8 @@ Every post gets its own Open Graph card during `astro build`. Nothing to do:
 the title and description you already wrote become the card, and the image URL
 is derived from the post's own path.
 
-- Output: `/og/blog/<slug>.png` (nested slugs stay nested), 1200×630, PNG.
+- Output: `/og/blog/<slug>.png` (nested slugs stay nested; non-ASCII or spaced
+  segments are folded to a safe name), 1200×630, PNG.
 - Content: `title`, `description`, and the publication date — read from the
   collection entry, never duplicated by hand.
 - Metadata: `og:image`, `og:image:alt`, `twitter:image`, and
@@ -76,9 +77,11 @@ is derived from the post's own path.
 - Long titles step down in size and are cut at a word boundary; long
   descriptions are trimmed to two or three lines rather than clipped mid-word.
 
-If a post ever needs a hand-made image, pass `image` (and optionally `imageAlt`)
-to `<Layout>` in `src/pages/blog/[...slug].astro`. The build gate then verifies
-the referenced file exists and is 1200×630. See AGENTS.md → Open Graph images.
+There is no per-post image override: the card is always generated, so it can
+always be verified. File names may contain spaces and Unicode (they are folded
+to a safe name), but keep slugs to lowercase ASCII kebab-case — the URL is the
+file name, and plain slugs stay readable in both. See
+AGENTS.md → Open Graph images.
 
 ## Markdown or MDX?
 

@@ -25,7 +25,10 @@ const COLOR = {
   background: "#0a0a0a",
   foreground: "#fafafa",
   muted: "#a1a1a1",
-  faint: "#6b6b6b",
+  // 6.1:1 on the card background. The footer carries the domain and the date,
+  // so it must clear WCAG AA for small text; `global.css`'s muted-foreground
+  // (#6b6b6b at 3.7:1) is a UI hint color, not body copy.
+  faint: "#8f8f8f",
   hairline: "rgba(255,255,255,0.12)",
   surface: "rgba(255,255,255,0.04)",
 } as const;
