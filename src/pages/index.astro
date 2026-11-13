@@ -36,7 +36,7 @@ const optimizedArtwork = track
 const writing = recentPosts(await getCollection("blog"));
 ---
 
-<Layout>
+<Layout title={page.seoTitle ?? page.title} description={page.description}>
   <div class="flex max-w-xl flex-col gap-4">
     <h1 class="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
       {page.title}

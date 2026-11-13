@@ -3,7 +3,7 @@
  *
  * Runs against `dist/` directly rather than through a browser: the contract is
  * about emitted files and markup, so reading them is both faster and stricter
- * than fetching pages. `pnpm validate` builds before E2E, and `src/lib/og/verify.ts`
+ * than fetching pages. `pnpm validate` builds before E2E, and `src/lib/seo/verify.ts`
  * runs the same checks during `astro build` — this suite pins the specifics
  * (sizes, per-page uniqueness, article titles) and would catch a loosened gate.
  */
@@ -16,6 +16,7 @@ import { expect, test } from "@playwright/test";
 import sharp from "sharp";
 
 import { ogImagePath } from "../../src/lib/og/paths";
+import { staticOgSpecs } from "../../src/lib/og/specs";
 import { site } from "../../src/lib/site";
 
 const DIST = new URL("../../dist/", import.meta.url);
@@ -47,6 +48,15 @@ function meta(html: string, key: string): string | undefined {
   return byProperty ?? html.match(new RegExp(`<meta name="${key}" content="([^"]*)"`))?.[1];
 }
 
+function decodeHtml(value: string): string {
+  return value
+    .replaceAll("&amp;", "&")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&#39;", "'")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">");
+}
+
 const pages = await htmlPages();
 
 test("the build contains every public page", async () => {
@@ -54,6 +64,31 @@ test("the build contains every public page", async () => {
   expect(routes).toContain("/");
   expect(routes).toContain("/blog/");
   expect(routes.filter((route) => route.startsWith("/blog/")).length).toBeGreaterThan(1);
+});
+
+test("static cards are derived from page metadata, with no separate route list", async () => {
+  // If a new static route is built, this fails until its metadata exists under
+  // `site.pages` — which is the same data the page renders. There is no
+  // separate OG registry to update.
+  const built = pages
+    .filter((page) => meta(page.html, "og:type") === "website")
+    .map((page) => page.route);
+  const specs = staticOgSpecs();
+
+  expect(new Set(specs.map((spec) => spec.route))).toEqual(new Set(built));
+
+  for (const spec of specs) {
+    const page = pages.find((entry) => entry.route === spec.route);
+    expect(page, spec.route).toBeDefined();
+    expect(meta(page?.html ?? "", "og:image")).toBe(`${site.url}${ogImagePath(spec.route)}`);
+
+    if (spec.kind === "page") {
+      expect(decodeHtml(meta(page?.html ?? "", "og:title") ?? ""), spec.route).toBe(
+        `${spec.title} — ${site.name}`,
+      );
+      expect(meta(page?.html ?? "", "og:description"), spec.route).toBe(spec.description);
+    }
+  }
 });
 
 for (const page of pages) {

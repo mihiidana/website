@@ -38,7 +38,20 @@ export type SiteWidgets = {
 };
 
 export type SitePage = {
+  /** Canonical route, e.g. `/` or `/about/`. Drives the generated OG image path. */
+  route: string;
+  /** Visible page heading. */
   title: string;
+  /**
+   * Document title base for `<title>` and Open Graph. Use it when the visible
+   * heading is not descriptive enough for search; the site-name suffix is
+   * appended centrally by `buildPageSeo()`.
+   */
+  seoTitle?: string;
+  /** Page-specific description used by the meta tags, social card, and listings. */
+  description: string;
+  /** Small label above the title on the generated social card. */
+  eyebrow?: string;
   intro: string;
   sections: readonly SiteSection[];
   widgets?: SiteWidgets;
@@ -53,12 +66,55 @@ export type SitePage = {
 };
 
 export type SiteWriting = {
+  /** Canonical archive route. Drives the generated OG image path. */
+  route: string;
+  /** Visible archive heading. */
   title: string;
+  /** Document title base for the archive; the site-name suffix is appended centrally. */
+  seoTitle: string;
   description: string;
   intro: string;
   empty: string;
   feedTitle: string;
   feedDescription: string;
+};
+
+/** An editorial exception to the metadata length warnings, with its reason. */
+export type SiteSeoMetadataException = {
+  route: string;
+  field: "title" | "description";
+  reason: string;
+};
+
+export type SiteSeo = {
+  /** `lang` on `<html>` and `inLanguage` in structured data. */
+  lang: string;
+  /** Open Graph locale, e.g. `en_US`. */
+  ogLocale: string;
+  /** Card used by every page unless it is explicitly noindex. */
+  twitterCard: "summary" | "summary_large_image";
+  /**
+   * Verified handles only — never invent one. Omitted values emit no
+   * `twitter:site` / `twitter:creator` tag at all.
+   */
+  twitter?: {
+    site?: string;
+    creator?: string;
+  };
+  /**
+   * The explicit noindex registry. A built page may only emit
+   * `robots: noindex` if its route appears here, and routes listed here must
+   * actually render noindex. `pnpm check:seo` fails on either mismatch, so a
+   * page cannot be silently excluded from search.
+   */
+  noindexRoutes: readonly string[];
+  /**
+   * Intentional exceptions to the metadata length warnings. Each entry must
+   * name an indexable route, a field, and a reason. Exceptions only silence the
+   * editorial warning; missing metadata, duplicates, and broken assets still
+   * fail the build.
+   */
+  metadataExceptions: readonly SiteSeoMetadataException[];
 };
 
 export type SiteConfig = {
@@ -67,22 +123,37 @@ export type SiteConfig = {
   description: string;
   url: string;
   socials: Readonly<Record<string, string>>;
+  seo: SiteSeo;
   writing: SiteWriting;
   pages: Readonly<Record<string, SitePage>>;
 };
 
+const siteDescription =
+  "Personal website of mihidana, featuring writing, useful resources, music, and notes on software, technology, and the web.";
+
 export const site: SiteConfig = {
   name: "mihidana",
   wordmark: "m",
-  description: "Personal website of mihidana.",
+  description: siteDescription,
   url: "https://hey.mihiidana.workers.dev",
   socials: {
     github: "https://github.com/mihiidana",
   },
+  seo: {
+    lang: "en",
+    ogLocale: "en_US",
+    twitterCard: "summary_large_image",
+    // No verified X/Twitter handle exists for this site, so no twitter:site or
+    // twitter:creator tag is emitted. Add the handle here only once it is real.
+    noindexRoutes: [],
+    metadataExceptions: [],
+  },
   writing: {
+    route: "/blog/",
     title: "Writing",
+    seoTitle: "Writing: Essays on Software, Craft & the Web",
     description:
-      "Essays and notes by mihidana on software, craft, and whatever else is worth the words.",
+      "Essays and notes by mihidana on software engineering, design, and the craft of building for the web — practical ideas, not hot takes.",
     intro: "Longer pieces on software, craft, and the things I keep coming back to.",
     empty: "Nothing published yet. The first piece is on its way.",
     feedTitle: "mihidana",
@@ -90,7 +161,11 @@ export const site: SiteConfig = {
   },
   pages: {
     home: {
+      route: "/",
       title: "Hello!",
+      seoTitle: "Personal Website, Writing & Experiments",
+      description: siteDescription,
+      eyebrow: "Personal site",
       intro:
         "Welcome to my corner of the internet. There's a bit of everything here, from projects and personal interests to ideas, experiments, and everything in between.",
       widgets: {

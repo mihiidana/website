@@ -6,25 +6,20 @@ import Container from "@/components/layouts/container.astro";
 import SiteFooter from "@/components/layouts/footer.astro";
 import SiteHeader from "@/components/layouts/header.astro";
 import PageHead from "@/components/seo/head.astro";
+import type { PageSeoInput } from "@/lib/seo";
 import { site } from "@/lib/site";
 import { THEME_COLORS, THEME_STORAGE_KEY } from "@/lib/theme";
 
-interface Props {
-  description?: string;
-  title?: string;
-  /** Open Graph object type; articles pass "article". */
-  type?: "website" | "article";
-  publishedTime?: string;
-  modifiedTime?: string;
-}
+/**
+ * Page metadata is required, not defaulted: a route cannot quietly ship the
+ * homepage's title and description. Add the remaining page facts (type, dates,
+ * breadcrumbs, listing items) through this same interface; `PageHead` and the
+ * JSON-LD builder derive every tag from them.
+ */
+interface Props extends Omit<PageSeoInput, "route"> {}
 
-const {
-  description = site.description,
-  title = site.name,
-  type,
-  publishedTime,
-  modifiedTime,
-} = Astro.props;
+const { title, description, type, noindex, publishedTime, modifiedTime, breadcrumbs, items } =
+  Astro.props;
 
 // Pre-paint theme bootstrap: applies the persisted (or default dark) theme
 // before first render. It must stay inline, so constants are interpolated
@@ -59,10 +54,11 @@ Astro.csp?.insertScriptHash(`sha256-${bootstrapHash}`);
 ---
 
 <!doctype html>
-<html class="dark" lang="en">
+<html class="dark" lang={site.seo.lang}>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="icon" href="/favicon.ico" sizes="32x32">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -74,8 +70,11 @@ Astro.csp?.insertScriptHash(`sha256-${bootstrapHash}`);
       title={title}
       description={description}
       type={type}
+      noindex={noindex}
       publishedTime={publishedTime}
       modifiedTime={modifiedTime}
+      breadcrumbs={breadcrumbs}
+      items={items}
     />
     <script is:inline set:html={themeBootstrap} />
     <Font cssVariable="--font-satoshi" preload />

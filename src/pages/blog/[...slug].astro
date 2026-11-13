@@ -11,8 +11,8 @@ import { getCollection, render } from "astro:content";
 import "@/styles/prose.css";
 
 import Layout from "@/components/layouts/Layout.astro";
-import ArticleJsonLd from "@/components/seo/article-json-ld.astro";
 import { displayDate, isoDate, postPath, publishedPosts } from "@/lib/blog";
+import { site } from "@/lib/site";
 
 export async function getStaticPaths() {
   const posts = publishedPosts(await getCollection("blog"));
@@ -36,15 +36,12 @@ const canonical = new URL(postPath(post.id), Astro.site).href;
   type="article"
   publishedTime={published}
   modifiedTime={updated}
+  breadcrumbs={[
+    { name: site.name, path: "/" },
+    { name: site.writing.title, path: "/blog/" },
+    { name: title, path: canonical },
+  ]}
 >
-  <ArticleJsonLd
-    slot="head"
-    title={title}
-    description={description}
-    published={published}
-    modified={updated}
-    url={canonical}
-  />
   <article>
     <header class="flex flex-col gap-3 border-b pb-8">
       <h1 class="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">{title}</h1>

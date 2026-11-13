@@ -36,6 +36,8 @@ jobs:
         run: pnpm test
       - name: Build
         run: pnpm build
+      - name: SEO check
+        run: pnpm check:seo
       - name: Install Playwright browser
         run: pnpm exec playwright install --with-deps chromium
       - name: E2E tests

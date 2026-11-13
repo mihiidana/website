@@ -95,13 +95,14 @@ for (const post of published) {
       new Date(post.pubDate).toISOString().slice(0, 10),
     );
 
-    const jsonLd = JSON.parse(
+    const graph = JSON.parse(
       (await page.locator('script[type="application/ld+json"]').textContent()) ?? "{}",
-    );
-    expect(jsonLd["@type"]).toBe("BlogPosting");
-    expect(jsonLd.headline).toBe(post.title);
-    expect(jsonLd.datePublished).toBe(new Date(post.pubDate).toISOString().slice(0, 10));
-    expect(jsonLd.url).toBe(canonical);
+    )["@graph"] as Record<string, unknown>[];
+    const jsonLd = graph.find((node) => node["@type"] === "BlogPosting");
+    expect(jsonLd).toBeDefined();
+    expect(jsonLd?.headline).toBe(post.title);
+    expect(jsonLd?.datePublished).toBe(new Date(post.pubDate).toISOString().slice(0, 10));
+    expect(jsonLd?.url).toBe(canonical);
   });
 
   test(`article ${post.id} raises no CSP violations`, async ({ page }) => {
@@ -278,7 +279,7 @@ test("every page advertises the RSS feed", async ({ page }) => {
     await page.goto(path);
     await expect(page.locator('link[rel="alternate"][type="application/rss+xml"]')).toHaveAttribute(
       "href",
-      "/rss.xml",
+      `${site.url}/rss.xml`,
     );
   }
 });

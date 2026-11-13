@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="mihidana">
+  <style>
+  .tile {
+    fill: #0a0a0a;
+  }
+  .mark {
+    stroke: #fafafa;
+  }
+  @media (prefers-color-scheme: dark) {
+    .tile {
+      fill: #fafafa;
+    }
+    .mark {
+      stroke: #0a0a0a;
+    }
+  }
+  </style>
+  <rect class="tile" width="32" height="32" rx="8" />
+  <g class="mark" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7.5 24V16" />
+    <path d="M7.5 17.5a4.5 4.5 0 0 1 9 0V24" />
+    <path d="M16.5 17.5a4.5 4.5 0 0 1 9 0V24" />
+  </g>
+</svg>
