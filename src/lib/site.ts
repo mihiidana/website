@@ -61,12 +61,37 @@ export type SiteWriting = {
   feedDescription: string;
 };
 
+export type SiteSeo = {
+  /** `lang` on `<html>` and `inLanguage` in structured data. */
+  lang: string;
+  /** Open Graph locale, e.g. `en_US`. */
+  ogLocale: string;
+  /** Card used by every page unless it is explicitly noindex. */
+  twitterCard: "summary" | "summary_large_image";
+  /**
+   * Verified handles only — never invent one. Omitted values emit no
+   * `twitter:site` / `twitter:creator` tag at all.
+   */
+  twitter?: {
+    site?: string;
+    creator?: string;
+  };
+  /**
+   * The explicit noindex registry. A built page may only emit
+   * `robots: noindex` if its route appears here, and routes listed here must
+   * actually render noindex. `pnpm check:seo` fails on either mismatch, so a
+   * page cannot be silently excluded from search.
+   */
+  noindexRoutes: readonly string[];
+};
+
 export type SiteConfig = {
   name: string;
   wordmark: string;
   description: string;
   url: string;
   socials: Readonly<Record<string, string>>;
+  seo: SiteSeo;
   writing: SiteWriting;
   pages: Readonly<Record<string, SitePage>>;
 };
@@ -78,6 +103,14 @@ export const site: SiteConfig = {
   url: "https://hey.mihiidana.workers.dev",
   socials: {
     github: "https://github.com/mihiidana",
+  },
+  seo: {
+    lang: "en",
+    ogLocale: "en_US",
+    twitterCard: "summary_large_image",
+    // No verified X/Twitter handle exists for this site, so no twitter:site or
+    // twitter:creator tag is emitted. Add the handle here only once it is real.
+    noindexRoutes: [],
   },
   writing: {
     title: "Writing",

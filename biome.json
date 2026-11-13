@@ -58,7 +58,14 @@
       "linter": { "enabled": false }
     },
     {
-      "includes": ["astro.config.mjs", "playwright.config.ts", "vitest.config.ts", "tests/**"],
+      "includes": [
+        "astro.config.mjs",
+        "playwright.config.ts",
+        "vitest.config.ts",
+        "scripts/**",
+        "src/lib/seo/verify.ts",
+        "tests/**"
+      ],
       "linter": {
         "rules": {
           "style": {

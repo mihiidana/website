@@ -22,7 +22,7 @@ Requires Node `>=26.13.0` and pnpm `12.18.0` (`packageManager`).
 
 ```text
 /
-├── public/               # favicons, PWA icons, site.webmanifest, _headers
+├── public/               # favicon.svg/ICO/PNG, PWA icons, _headers
 ├── src
 │   ├── components/
 │   │   ├── blog/         # post-list.astro: list shared by homepage + archive
@@ -32,16 +32,17 @@ Requires Node `>=26.13.0` and pnpm `12.18.0` (`packageManager`).
 │   │   ├── widgets/      # Svelte 5 islands (clock, led-matrix, music-player,
 │   │   │                 # debounce-playground)
 │   │   ├── ui/           # shadcn-svelte primitives (button, card, badge, slider)
-│   │   └── seo/          # head.astro (title, canonical, OG, Twitter),
-│   │                     # article-json-ld.astro (BlogPosting)
+│   │   └── seo/          # head.astro (all metadata), json-ld.astro
 │   ├── assets/           # source images processed by Astro (music-artwork,
 │   │                     # blog/ images shared across posts)
 │   ├── content/
 │   │   └── blog/         # posts: .md or .mdx, one collection, path = slug
-│   ├── lib/              # site.ts, blog.ts, heading-permalinks.ts,
+│   ├── lib/              # site.ts, seo.ts, blog.ts, heading-permalinks.ts,
 │   │                     # article-image-sizes.ts, remote-images.ts, theme.ts, utils.ts
-│   │   └── og/           # social images: specs, paths, Satori template, build gate
-│   ├── pages/            # file-based routes (index.astro, blog/, rss.xml, og/)
+│   │   ├── seo/          # structured data, build validator, build integration
+│   │   └── og/           # social images: specs, paths, Satori template
+│   ├── pages/            # routes (index, blog/, rss.xml, robots.txt,
+│   │                     # site.webmanifest, og/)
 │   └── styles/           # global.css: Tailwind, tokens, fonts; prose.css: articles
 ├── tests
 │   ├── unit/             # vitest: theme, blog helpers/schema, heading permalinks,
@@ -57,11 +58,12 @@ Requires Node `>=26.13.0` and pnpm `12.18.0` (`packageManager`).
 └── vitest.config.ts      # unit tests via Astro's getViteConfig
 ```
 
-Site identity, description, socials, and page copy are centralized in
-[`src/lib/site.ts`](./src/lib/site.ts). Edit `site.pages.home` to change the
-homepage; adding a page means adding a key under `pages` and rendering it from a
-matching route under `src/pages/`. Use the `@/` import alias rather than relative
-imports: Biome enforces this.
+Site identity, description, socials, locale, SEO policy, and page copy are
+centralized in [`src/lib/site.ts`](./src/lib/site.ts). Edit `site.pages.home` to
+change the homepage; adding a page means adding a key under `pages`, rendering it
+from a matching route under `src/pages/` through `Layout.astro` with explicit
+`title`/`description` props, and adding an `OgSpec`. Use the `@/` import alias
+rather than relative imports: Biome enforces this.
 
 ## Writing
 
@@ -74,11 +76,20 @@ the heading links to `/blog/`, which lists the
 full archive newest first. There is no Blog link in the header by design.
 `/rss.xml` is the feed and `sitemap-index.xml` covers every route.
 
-Every public page also gets a generated 1200×630 social image at build time
+Every public page renders through `Layout.astro` with explicit page metadata.
+`src/lib/seo.ts` composes the document title, absolute canonical URL, Open Graph
+and Twitter tags, locale, and route-derived social image, while
+`src/lib/seo/jsonld.ts` builds a `Person`/`WebSite`/`WebPage`/`BlogPosting`
+structured-data graph from the same data. `robots.txt` and the web manifest are
+generated from `site.ts`; `@astrojs/sitemap` emits only indexable pages. A page
+marked `noindex` must also be registered in `site.seo.noindexRoutes`.
+
+Every indexable page also gets a generated 1200×630 social image at build time
 (`/og/home.png`, `/og/blog.png`, `/og/blog/<slug>.png`), rendered by Satori from
-the page's own title and description and rasterized with sharp. The build fails
-if any page is missing one. See
-[AGENTS.md](./AGENTS.md#rules) → Open Graph images.
+the page's own title and description and rasterized with sharp. `pnpm build`
+runs the SEO gate automatically and fails if any page is missing metadata, has a
+wrong canonical, ships invalid JSON-LD, or lacks its card. See
+[AGENTS.md](./AGENTS.md#rules) → SEO and Open Graph images.
 
 Four demonstration articles ship in `src/content/blog/` — three Markdown and one
 MDX with a hydrated Svelte demo — so the system can be evaluated end to end.
@@ -92,22 +103,27 @@ Agent instructions for working in this repo live in [AGENTS.md](./AGENTS.md).
 
 All commands run from the project root:
 
-| Command          | Action                                                 |
-| :--------------- | :----------------------------------------------------- |
-| `pnpm install`   | Installs dependencies                                  |
-| `pnpm dev`       | Starts dev server at `localhost:4321`                  |
-| `pnpm build`     | Builds the production site to `./dist/`                |
-| `pnpm preview`   | Previews the build locally                             |
-| `pnpm check`     | Lint and format check with Biome                       |
-| `pnpm check:fix` | Fix lint and format issues with Biome                  |
-| `pnpm typecheck` | Type check (`astro check` + `svelte-check`)            |
-| `pnpm test`      | Unit tests (vitest)                                    |
-| `pnpm test:e2e`  | E2E + accessibility tests (Playwright; build first)    |
-| `pnpm validate`  | Everything CI runs: check, typecheck, test, build, e2e |
-| `pnpm deploy`    | Build and deploy to Cloudflare Workers                 |
-| `pnpm astro ...` | Run Astro CLI commands                                 |
+| Command          | Action                                                      |
+| :--------------- | :---------------------------------------------------------- |
+| `pnpm install`   | Installs dependencies                                       |
+| `pnpm dev`       | Starts dev server at `localhost:4321`                       |
+| `pnpm build`     | Builds the production site to `./dist/`                     |
+| `pnpm preview`   | Previews the build locally                                  |
+| `pnpm check`     | Lint and format check with Biome                            |
+| `pnpm check:fix` | Fix lint and format issues with Biome                       |
+| `pnpm typecheck` | Type check (`astro check` + `svelte-check`)                 |
+| `pnpm test`      | Unit tests (vitest)                                         |
+| `pnpm check:seo` | Validate every generated HTML page in `dist/`               |
+| `pnpm test:e2e`  | E2E + accessibility tests (Playwright; build first)         |
+| `pnpm validate`  | Everything CI runs: check, typecheck, test, build, SEO, e2e |
+| `pnpm deploy`    | Build and deploy to Cloudflare Workers                      |
+| `pnpm astro ...` | Run Astro CLI commands                                      |
 
-`pnpm validate` (lint, typecheck, unit tests, build, E2E) mirrors what CI runs on
+`pnpm build` runs `src/lib/seo/integration.ts`, which validates the finished
+`dist/` before exiting. `pnpm check:seo` reruns the same gate on an existing
+build without rebuilding.
+
+`pnpm validate` (lint, typecheck, unit tests, build, SEO, E2E) mirrors what CI runs on
 every push and pull request to `main`: the workflow executes the same checks as
 separate steps (installing the Playwright browser before E2E). The `deploy` job
 runs `pnpm deploy` on pushes to `main` and only starts after CI passes; it

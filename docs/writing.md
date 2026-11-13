@@ -155,8 +155,8 @@ hashed and emitted under `/_astro/`, so it can be cached forever.
 
 **Do not use `public/` for article images.** Files there are copied verbatim and
 served unoptimized: no resizing, no modern formats, no hashed filenames. It is
-the right place for the favicons and `site.webmanifest`, and the wrong place for
-anything a post displays.
+the right place for the favicons, and the wrong place for anything a post
+displays. (`/site.webmanifest` is generated from `site.ts`.)
 
 ### Remote images: paste the URL
 

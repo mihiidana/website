@@ -7,14 +7,22 @@ import { getCollection } from "astro:content";
 
 import PostList from "@/components/blog/post-list.astro";
 import Layout from "@/components/layouts/Layout.astro";
-import { publishedPosts } from "@/lib/blog";
+import { postPath, publishedPosts } from "@/lib/blog";
 import { site } from "@/lib/site";
 
 const posts = publishedPosts(await getCollection("blog"));
 const copy = site.writing;
 ---
 
-<Layout title={copy.title} description={copy.description}>
+<Layout
+  title={copy.title}
+  description={copy.description}
+  breadcrumbs={[
+    { name: site.name, path: "/" },
+    { name: copy.title, path: "/blog/" },
+  ]}
+  items={posts.map((post) => ({ name: post.data.title, path: postPath(post.id) }))}
+>
   <div class="flex flex-col gap-4">
     <h1 class="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">{copy.title}</h1>
     <p class="text-pretty text-lg text-muted-foreground">{copy.intro}</p>

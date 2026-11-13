@@ -30,19 +30,20 @@ Writing lives as Markdown files committed to this repository and is built by Ast
 - Publishing mechanism is Markdown (`.md`) or MDX (`.mdx`) committed to `src/content/blog/`; Astro's content collection validates frontmatter and generates routes, RSS, and sitemap entries at build time.
 - Writing structure is settled: typed frontmatter (`title`, `description`, `pubDate`, optional `updatedDate`, `draft`), path-derived slugs, draft exclusion from every surface, `/rss.xml`, and an `@astrojs/sitemap` sitemap. The homepage carries a **Writing** section with the four newest published posts; the header has no Blog link by design, so the homepage is the entry point. No tags, categories, pagination, search, comments, or newsletter — see `docs/writing.md` for the authoring contract.
 - Every public page gets a generated 1200×630 social image at build time (Satori + sharp, output under `/og/`), derived from that page's own title and description: homepage, `/blog/`, and each published article. No hand-made per-article artwork, no runtime generation, no external image service.
+- SEO is generated centrally from `site.ts` and the page's own data: unique title/description, absolute canonical URL, Open Graph + Twitter tags, `og:locale`, JSON-LD (`Person`, `WebSite`, `WebPage`, `CollectionPage`, `BlogPosting`, `BreadcrumbList`), `robots.txt`, sitemap, and a `noindex` registry. `pnpm build` validates every generated HTML file; a new route missing metadata or bypassing the shared layout fails the build.
 - Undecided and not to be invented: project list, tool lineup, contact channels, post topics, and analytics. The only linked social profile is GitHub (`site.socials.github`).
 - Content: a homepage (intro, widgets, Writing, resources, tech stack), site header/footer, a light/dark theme toggle, and four demonstration articles in `src/content/blog/` — three Markdown and one MDX with a hydrated Svelte demo. They are starter content, not claims about mihidana's history, and can be edited or removed.
 
 ## Brand Commitments
 
 - Public identity: `mihidana`; domain `https://hey.mihiidana.workers.dev`.
-- An existing favicon and PWA icon set plus `site.webmanifest` under `public/` use the name mihidana and must not be replaced with a different identity without an explicit rebrand.
+- An existing favicon and PWA icon set plus a generated `site.webmanifest` use the name mihidana and must not be replaced with a different identity without an explicit rebrand. `public/favicon.svg` adds a light/dark-aware SVG monogram; the ICO/PNG fallbacks remain.
 - Visual identity in code: the `md` wordmark in Caveat Variable (`font-signature`), a neutral monochrome shadcn token palette, and a dark theme by default with a persisted light/dark toggle. No logo mark or broader voice guideline has been established.
 - Social cards follow the same identity: dark monochrome, Satoshi with Caveat wordmark, the site's own copy, and no invented facts — each card states only the page's title, description, date, and the real domain.
 
 ## Evidence on Hand
 
-- `public/`: favicon.ico (16/32), favicon-16x16.png, favicon-32x32.png, apple-touch-icon.png (180), android-chrome-192x192.png, android-chrome-512x512.png, site.webmanifest.
+- `public/`: favicon.svg, favicon.ico (16/32), favicon-16x16.png, favicon-32x32.png, apple-touch-icon.png (180), android-chrome-192x192.png, android-chrome-512x512.png. The manifest is generated from `src/pages/site.webmanifest.ts`.
 - No posts, project write-ups, bio copy, testimonials, customer names, metrics, or benchmarks exist. None may be fabricated; all such content must come from mihidana.
 
 ## Product Principles

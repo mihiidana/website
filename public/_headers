@@ -12,3 +12,13 @@
 # change the bytes behind the same URL, so they must not be cached immutably.
 /og/*
   Cache-Control: public, max-age=0, must-revalidate
+
+# Generated crawl assets. Keep them revalidatable so a new deploy cannot leave
+# crawlers with a stale sitemap or manifest.
+/site.webmanifest
+  Content-Type: application/manifest+json
+  Cache-Control: public, max-age=0, must-revalidate
+/robots.txt
+  Cache-Control: public, max-age=0, must-revalidate
+/sitemap*.xml
+  Cache-Control: public, max-age=0, must-revalidate

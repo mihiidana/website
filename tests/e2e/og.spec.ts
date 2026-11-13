@@ -3,7 +3,7 @@
  *
  * Runs against `dist/` directly rather than through a browser: the contract is
  * about emitted files and markup, so reading them is both faster and stricter
- * than fetching pages. `pnpm validate` builds before E2E, and `src/lib/og/verify.ts`
+ * than fetching pages. `pnpm validate` builds before E2E, and `src/lib/seo/verify.ts`
  * runs the same checks during `astro build` — this suite pins the specifics
  * (sizes, per-page uniqueness, article titles) and would catch a loosened gate.
  */

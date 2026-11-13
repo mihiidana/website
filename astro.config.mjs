@@ -9,8 +9,8 @@ import { defineConfig, fontProviders } from "astro/config";
 
 import { articleImageSizesPlugin } from "./src/lib/article-image-sizes";
 import { headingPermalinksPlugin } from "./src/lib/heading-permalinks";
-import { ogImageCheck } from "./src/lib/og/integration";
 import { remoteImages } from "./src/lib/remote-images";
+import { seoCheck } from "./src/lib/seo/integration";
 import { site } from "./src/lib/site";
 
 // https://astro.build/config
@@ -22,6 +22,10 @@ export default defineConfig({
 
   // Single source of truth for the public URL (also used for canonical URLs).
   site: site.url,
+
+  // Canonical policy: every page lives at `/path/`. `head.astro` normalizes to
+  // the same shape, and `pnpm check:seo` fails if canonical URLs drift.
+  trailingSlash: "always",
 
   image: {
     // Any publicly accessible HTTPS image URL may be optimized at build time.
@@ -60,7 +64,16 @@ export default defineConfig({
 
   // `remoteImages()` must run before `mdx()` resolves the Markdown processor
   // at `astro:config:done`, so it is listed first. See src/lib/remote-images.ts.
-  integrations: [remoteImages(), svelte(), mdx(), sitemap(), ogImageCheck()],
+  // `sitemap()` must run before `seoCheck()` so the gate sees the emitted XML.
+  integrations: [
+    remoteImages(),
+    svelte(),
+    mdx(),
+    sitemap({
+      filter: (page) => !site.seo.noindexRoutes.includes(new URL(page).pathname),
+    }),
+    seoCheck(),
+  ],
 
   markdown: {
     // Astro 7's default Markdown processor is Sätteri; naming it here is what

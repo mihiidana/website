@@ -1,0 +1,20 @@
+---
+/**
+ * Inline JSON-LD. Astro hashes bundled scripts but not `is:inline` ones, so the
+ * exact serialized payload is hashed and registered with the CSP before the
+ * page renders.
+ */
+import { serializeJsonLd } from "@/lib/seo/jsonld";
+
+interface Props {
+  data: unknown;
+}
+
+const { data } = Astro.props;
+const payload = serializeJsonLd(data);
+const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(payload));
+const hash = btoa(String.fromCharCode(...new Uint8Array(digest)));
+Astro.csp?.insertScriptHash(`sha256-${hash}`);
+---
+
+<script type="application/ld+json" is:inline set:html={payload} />
