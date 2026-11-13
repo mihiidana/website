@@ -29,12 +29,9 @@ export const getStaticPaths = (async () => {
 export const GET: APIRoute = async ({ props }) => {
   const png = await renderOgImage(props.spec);
 
+  // Static builds write the body to `dist/og/…png`; headers set here do not
+  // survive. The caching policy lives in `public/_headers` instead.
   return new Response(new Uint8Array(png), {
-    headers: {
-      "Content-Type": "image/png",
-      // The URL is page-stable, not content-hashed: a re-publish can change the
-      // bytes behind the same path, so caches must revalidate.
-      "Cache-Control": "public, max-age=0, must-revalidate",
-    },
+    headers: { "Content-Type": "image/png" },
   });
 };

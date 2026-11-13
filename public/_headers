@@ -7,3 +7,8 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: DENY
+
+# Social cards are page-stable, not content-hashed: re-publishing a post can
+# change the bytes behind the same URL, so they must not be cached immutably.
+/og/*
+  Cache-Control: public, max-age=0, must-revalidate

@@ -86,15 +86,24 @@ function el(type: string, style: Record<string, unknown>, children?: unknown): N
 }
 
 /**
- * Cut at a word boundary with an ellipsis. CSS clamping alone can break a word
- * in half (`JavaScrip…`), which reads as a bug on a social card; this keeps the
- * last word whole and the clamp below as a safety net only.
+ * Cut at a boundary with an ellipsis. CSS clamping alone can break a word in
+ * half (`JavaScrip…`), which reads as a bug on a social card. This prefers a
+ * clause boundary (comma, dash, colon) near the limit, then a word boundary,
+ * and leaves the clamp below as a safety net only.
  */
 function fitText(text: string, maxChars: number): string {
   if (text.length <= maxChars) return text;
+
   const cut = text.slice(0, maxChars);
-  const boundary = cut.lastIndexOf(" ");
-  const base = boundary > maxChars * 0.6 ? cut.slice(0, boundary) : cut;
+  const clause = Math.max(
+    cut.lastIndexOf(", "),
+    cut.lastIndexOf(" — "),
+    cut.lastIndexOf(": "),
+    cut.lastIndexOf(". "),
+  );
+
+  const boundary = clause > maxChars * 0.6 ? clause : cut.lastIndexOf(" ");
+  const base = boundary > maxChars * 0.5 ? cut.slice(0, boundary) : cut;
   return `${base.replace(/[,;:.\s]+$/, "")}…`;
 }
 
