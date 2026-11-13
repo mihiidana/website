@@ -60,10 +60,13 @@ Requires Node `>=26.13.0` and pnpm `12.18.0` (`packageManager`).
 
 Site identity, description, socials, locale, SEO policy, and page copy are
 centralized in [`src/lib/site.ts`](./src/lib/site.ts). Edit `site.pages.home` to
-change the homepage; adding a page means adding a key under `pages`, rendering it
-from a matching route under `src/pages/` through `Layout.astro` with explicit
-`title`/`description` props, and adding an `OgSpec`. Use the `@/` import alias
-rather than relative imports: Biome enforces this.
+change the homepage; adding a page means adding one entry under `pages` with its
+`route`, `title`, `description`, and optional `seoTitle`, then rendering it from
+a matching route under `src/pages/` through `Layout.astro` with the same
+`title`/`description` props. That entry is also the source of the page's social
+card: `src/lib/og/specs.ts` derives every static card from it, so there is no
+separate `OgSpec` to add. Use the `@/` import alias rather than relative imports:
+Biome enforces this.
 
 ## Writing
 
@@ -94,10 +97,12 @@ characters for titles and 110–160 for descriptions. An intentional exception
 lives in `site.seo.metadataExceptions` with a required reason.
 
 Every indexable page also gets a generated 1200×630 social image at build time
-(`/og/home.png`, `/og/blog.png`, `/og/blog/<slug>.png`), rendered by Satori from
-the page's own title and description and rasterized with sharp. `pnpm build`
-runs the SEO gate automatically and fails if any page is missing metadata, has a
-wrong canonical, ships invalid JSON-LD, or lacks its card. See
+(`/og/home.png`, `/og/blog.png`, `/og/blog/<slug>.png`, `/og/<page>.png`),
+rendered by Satori from the page's own title and description and rasterized with
+sharp. Static cards are derived from the same `site.pages` metadata as the HTML;
+there is no per-route image registry. `pnpm build` runs the SEO gate
+automatically and fails if any page is missing metadata, has a wrong canonical,
+ships invalid JSON-LD, or lacks its card. See
 [AGENTS.md](./AGENTS.md#rules) → SEO and Open Graph images.
 
 Four demonstration articles ship in `src/content/blog/` — three Markdown and one

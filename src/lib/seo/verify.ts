@@ -151,6 +151,12 @@ function first(values: string[] | undefined): string | undefined {
   return values?.[0];
 }
 
+/** Mirrors `buildPageSeo()`: append the site suffix once, never twice. */
+function documentTitle(base: string): string {
+  const suffix = ` — ${site.name}`;
+  return base === site.name || base.endsWith(suffix) ? base : `${base}${suffix}`;
+}
+
 /** The `@id` of a JSON-LD reference object (`{ "@id": "…" }`). */
 function refId(value: unknown): string | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
@@ -362,6 +368,42 @@ export async function verifySeo({ distDir }: { distDir: string }): Promise<SeoVe
     const normalized = normalizeRoute(route);
     if (!pages.some((page) => page.route === normalized)) {
       add("/seo", `site.seo.noindexRoutes lists ${route}, but no page was built at that route`);
+    }
+  }
+
+  // `site.pages` is the metadata source for static social cards, so each entry
+  // must describe a real built page whose rendered metadata matches it. That is
+  // what keeps the card and the HTML from drifting apart, and what makes a
+  // route without registered metadata a build failure rather than a page with
+  // no social card.
+  for (const [key, declared] of Object.entries(site.pages)) {
+    const route = normalizeRoute(declared.route);
+    const built = pages.find((candidate) => candidate.route === route);
+    if (!built) {
+      add("/seo", `site.pages.${key} declares ${route}, but no page was built there`);
+      continue;
+    }
+    const robots = (first(built.metas.get("robots")) ?? "").toLowerCase();
+    if (robots.includes("noindex")) continue;
+
+    if (first(built.title) !== documentTitle(declared.seoTitle ?? declared.title)) {
+      add(route, `title does not match site.pages.${key}.seoTitle/title`);
+    }
+    if (first(built.metas.get("description")) !== declared.description) {
+      add(route, `meta description does not match site.pages.${key}.description`);
+    }
+  }
+
+  const archiveRoute = normalizeRoute(site.writing.route);
+  const archive = pages.find((candidate) => candidate.route === archiveRoute);
+  if (!archive) {
+    add("/seo", `site.writing declares ${site.writing.route}, but no page was built there`);
+  } else if (!(first(archive.metas.get("robots")) ?? "").toLowerCase().includes("noindex")) {
+    if (first(archive.title) !== documentTitle(site.writing.seoTitle)) {
+      add(archiveRoute, "title does not match site.writing.seoTitle");
+    }
+    if (first(archive.metas.get("description")) !== site.writing.description) {
+      add(archiveRoute, "meta description does not match site.writing.description");
     }
   }
 

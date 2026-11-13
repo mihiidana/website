@@ -38,6 +38,8 @@ export type SiteWidgets = {
 };
 
 export type SitePage = {
+  /** Canonical route, e.g. `/` or `/about/`. Drives the generated OG image path. */
+  route: string;
   /** Visible page heading. */
   title: string;
   /**
@@ -46,6 +48,10 @@ export type SitePage = {
    * appended centrally by `buildPageSeo()`.
    */
   seoTitle?: string;
+  /** Page-specific description used by the meta tags, social card, and listings. */
+  description: string;
+  /** Small label above the title on the generated social card. */
+  eyebrow?: string;
   intro: string;
   sections: readonly SiteSection[];
   widgets?: SiteWidgets;
@@ -60,6 +66,8 @@ export type SitePage = {
 };
 
 export type SiteWriting = {
+  /** Canonical archive route. Drives the generated OG image path. */
+  route: string;
   /** Visible archive heading. */
   title: string;
   /** Document title base for the archive; the site-name suffix is appended centrally. */
@@ -120,11 +128,13 @@ export type SiteConfig = {
   pages: Readonly<Record<string, SitePage>>;
 };
 
+const siteDescription =
+  "Personal website of mihidana, featuring writing, useful resources, music, and notes on software, technology, and the web.";
+
 export const site: SiteConfig = {
   name: "mihidana",
   wordmark: "m",
-  description:
-    "Personal website of mihidana, featuring writing, useful resources, music, and notes on software, technology, and the web.",
+  description: siteDescription,
   url: "https://hey.mihiidana.workers.dev",
   socials: {
     github: "https://github.com/mihiidana",
@@ -139,6 +149,7 @@ export const site: SiteConfig = {
     metadataExceptions: [],
   },
   writing: {
+    route: "/blog/",
     title: "Writing",
     seoTitle: "Writing: Essays on Software, Craft & the Web",
     description:
@@ -150,8 +161,11 @@ export const site: SiteConfig = {
   },
   pages: {
     home: {
+      route: "/",
       title: "Hello!",
       seoTitle: "Personal Website, Writing & Experiments",
+      description: siteDescription,
+      eyebrow: "Personal site",
       intro:
         "Welcome to my corner of the internet. There's a bit of everything here, from projects and personal interests to ideas, experiments, and everything in between.",
       widgets: {

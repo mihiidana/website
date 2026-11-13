@@ -330,6 +330,40 @@ function indexBody(spec: OgSpec): Node {
   );
 }
 
+/** Generic static page: the page's own title and description, no list chrome. */
+function pageBody(spec: OgSpec): Node {
+  return el(
+    "div",
+    { display: "flex", flexDirection: "column", gap: "28px", width: "100%", maxWidth: "980px" },
+    [
+      el(
+        "div",
+        {
+          fontSize: `${titleSize(spec.title)}px`,
+          fontWeight: 700,
+          lineHeight: 1.05,
+          letterSpacing: "-0.04em",
+          lineClamp: 3,
+          textOverflow: "ellipsis",
+        },
+        spec.title,
+      ),
+      el(
+        "div",
+        {
+          fontSize: "30px",
+          lineHeight: 1.45,
+          color: COLOR.muted,
+          maxWidth: "860px",
+          lineClamp: 3,
+          textOverflow: "ellipsis",
+        },
+        fitText(spec.description, 160),
+      ),
+    ],
+  );
+}
+
 /** Article: the title is the subject; description sits under it. */
 function articleBody(spec: OgSpec): Node {
   return el("div", { display: "flex", flexDirection: "column", gap: "30px", width: "100%" }, [
@@ -367,7 +401,9 @@ function composition(spec: OgSpec): Node {
       ? homeBody(spec)
       : spec.kind === "index"
         ? indexBody(spec)
-        : articleBody(spec);
+        : spec.kind === "article"
+          ? articleBody(spec)
+          : pageBody(spec);
 
   return el(
     "div",
