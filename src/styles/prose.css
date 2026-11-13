@@ -1,0 +1,162 @@
+/*
+ * Article styles, layered on the `prose` utility from
+ * @tailwindcss/typography. Imported only by `src/pages/blog/[...slug].astro`, so
+ * the site's global stylesheet stays untouched beyond the plugin registration.
+ *
+ * Colors map the plugin's `--tw-prose-*` variables onto the site's semantic
+ * tokens, which makes light and dark follow the existing theme toggle.
+ */
+.prose {
+  --tw-prose-body: var(--foreground);
+  --tw-prose-headings: var(--foreground);
+  --tw-prose-lead: var(--muted-foreground);
+  --tw-prose-links: var(--foreground);
+  --tw-prose-bold: var(--foreground);
+  --tw-prose-counters: var(--muted-foreground);
+  --tw-prose-bullets: var(--muted-foreground);
+  --tw-prose-hr: var(--border);
+  --tw-prose-quotes: var(--muted-foreground);
+  --tw-prose-quote-borders: var(--border);
+  --tw-prose-captions: var(--muted-foreground);
+  --tw-prose-code: var(--foreground);
+  --tw-prose-pre-code: var(--foreground);
+  --tw-prose-pre-bg: var(--muted);
+  --tw-prose-th-borders: var(--border);
+  --tw-prose-td-borders: var(--border);
+}
+
+.prose :where(a):not(:where([class~="not-prose"] *)) {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+
+/*
+ * Code blocks are square-cornered surfaces on the muted token, matching the
+ * site's zero-radius geometry. The typography plugin ships a 0.375rem radius
+ * that reads as a card; it is reset here rather than globally.
+ */
+.prose :where(pre) {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.prose :where(pre code) {
+  border-radius: 0;
+}
+
+/*
+ * Images. Astro's `layout: "constrained"` emits width, height, srcset, sizes,
+ * and `data-astro-image` for every processed image — Markdown or MDX, local or
+ * remote — and its own styles ship inside `@layer astro.images`, declared after
+ * Tailwind's layers, so the typography plugin's `.prose img` rules still win.
+ * Only what Astro cannot know is added here.
+ */
+
+/* The typography plugin styles `img` and `picture > img` but never `picture`
+   itself, and `<Picture />` renders one. Without this it stays inline. */
+.prose :where(picture) {
+  display: block;
+}
+
+/* Square, shadowless, like every other surface on the site. */
+.prose :where(img) {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* The site header is sticky (h-16), so a fragment jump must clear it. */
+.prose :where(h2, h3, h4, h5, h6) {
+  scroll-margin-top: 5rem;
+}
+
+/*
+ * Heading permalinks. The anchor is emitted empty by
+ * `src/lib/heading-permalinks.ts` and the `#` is drawn here so it never enters
+ * the heading's text content (Astro collects that text as heading metadata).
+ *
+ * The glyph is subtle at rest and appears on hover or keyboard focus. It is
+ * always present in the accessibility tree — the accessible name is the
+ * plugin's `aria-label` — and `opacity` rather than `display` keeps it
+ * focusable, so keyboard users can tab to it on touch-capable devices too.
+ */
+.prose :where(.heading-anchor) {
+  margin-inline-start: 0.375em;
+  color: var(--muted-foreground);
+  font-weight: 400;
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+}
+
+.prose :where(.heading-anchor)::after {
+  content: "#";
+}
+
+.prose :where(h2, h3, h4, h5, h6):hover :where(.heading-anchor),
+.prose :where(.heading-anchor):focus-visible {
+  opacity: 1;
+}
+
+.prose :where(.heading-anchor):hover {
+  color: var(--foreground);
+}
+
+.prose :where(.heading-anchor):focus-visible {
+  border-radius: 0;
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 50%, transparent);
+}
+
+@media (hover: none) {
+  .prose :where(.heading-anchor) {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prose :where(.heading-anchor) {
+    transition: none;
+  }
+}
+
+/*
+ * Tables scroll horizontally instead of squeezing columns, and code inside
+ * cells never breaks mid-token (semantic token names are long and hyphenated).
+ */
+.prose :where(table) {
+  display: block;
+  overflow-x: auto;
+}
+
+.prose :where(table) :where(code) {
+  white-space: nowrap;
+}
+
+.prose :where(code):not(:where(pre *, [class~="not-prose"] *))::before,
+.prose :where(code):not(:where(pre *, [class~="not-prose"] *))::after {
+  content: "";
+}
+
+/*
+ * Shiki dual themes (see astro.config.mjs). Shiki inlines the light palette on
+ * every token; the dark palette is emitted as `--shiki-dark` variables, so the
+ * theme toggle switches syntax colors with no extra JavaScript. `!important`
+ * is required because those values arrive as inline `style` attributes.
+ */
+/* biome-ignore-start lint/complexity/noImportantStyles: overriding Shiki's inline styles */
+/* One surface color in both themes; only the token colors change. */
+.prose .astro-code {
+  background-color: var(--muted) !important;
+}
+
+.dark .astro-code {
+  color: var(--shiki-dark) !important;
+}
+
+.dark .astro-code span {
+  color: var(--shiki-dark) !important;
+  font-style: var(--shiki-dark-font-style) !important;
+  font-weight: var(--shiki-dark-font-weight) !important;
+  text-decoration: var(--shiki-dark-text-decoration) !important;
+}
+/* biome-ignore-end lint/complexity/noImportantStyles: end */

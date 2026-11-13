@@ -1,0 +1,38 @@
+---
+/**
+ * Editorial list of posts shared by the homepage Writing section and the
+ * /blog/ archive, so both surfaces stay visually identical as content grows.
+ */
+import type { BlogPost } from "@/lib/blog";
+import { displayDate, isoDate, postPath } from "@/lib/blog";
+
+interface Props {
+  posts: readonly BlogPost[];
+  /** `h3` under the homepage's Writing `h2`, `h2` under the archive `h1`. */
+  headingLevel?: "h2" | "h3";
+}
+
+const { posts, headingLevel = "h2" } = Astro.props;
+const Heading = headingLevel;
+---
+
+<ol class="flex flex-col gap-8">
+  {posts.map((post) => (
+    <li>
+      <article>
+        <time datetime={isoDate(post.data.pubDate)} class="font-mono text-xs text-muted-foreground">
+          {displayDate(post.data.pubDate)}
+        </time>
+        <Heading class="mt-1 text-xl font-semibold tracking-tight text-balance">
+          <a
+            href={postPath(post.id)}
+            class="underline-offset-4 transition-colors hover:text-muted-foreground focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          >
+            {post.data.title}
+          </a>
+        </Heading>
+        <p class="mt-1 text-pretty text-muted-foreground">{post.data.description}</p>
+      </article>
+    </li>
+  ))}
+</ol>

@@ -25,19 +25,30 @@ Requires Node `>=26.13.0` and pnpm `12.18.0` (`packageManager`).
 ├── public/               # favicons, PWA icons, site.webmanifest, _headers
 ├── src
 │   ├── components/
+│   │   ├── blog/         # post-list.astro: list shared by homepage + archive
 │   │   ├── layouts/      # Layout.astro (head, theme bootstrap, chrome),
 │   │   │                 # header, footer, container, mode-toggle.svelte
 │   │   ├── sections/     # composed page sections driven by site.ts
-│   │   ├── widgets/      # Svelte 5 islands (clock, led-matrix, music-player)
+│   │   ├── widgets/      # Svelte 5 islands (clock, led-matrix, music-player,
+│   │   │                 # debounce-playground)
 │   │   ├── ui/           # shadcn-svelte primitives (button, card, badge, slider)
-│   │   └── seo/          # head.astro: title, canonical, OG, Twitter
-│   ├── lib/              # site.ts (identity + copy), theme.ts, utils.ts (cn)
-│   ├── pages/            # file-based routes (index.astro)
-│   └── styles/           # global.css: Tailwind, shadcn tokens, fonts
+│   │   └── seo/          # head.astro (title, canonical, OG, Twitter),
+│   │                     # article-json-ld.astro (BlogPosting)
+│   ├── assets/           # source images processed by Astro (music-artwork,
+│   │                     # blog/ images shared across posts)
+│   ├── content/
+│   │   └── blog/         # posts: .md or .mdx, one collection, path = slug
+│   ├── lib/              # site.ts, blog.ts, heading-permalinks.ts,
+│   │                     # article-image-sizes.ts, remote-images.ts, theme.ts, utils.ts
+│   ├── pages/            # file-based routes (index.astro, blog/, rss.xml)
+│   └── styles/           # global.css: Tailwind, tokens, fonts; prose.css: articles
 ├── tests
-│   ├── unit/             # vitest: shared theme constants
-│   └── e2e/              # Playwright: smoke, a11y, CSP, theme, SEO, widgets, links
+│   ├── unit/             # vitest: theme, blog helpers/schema, heading permalinks, images
+│   └── e2e/              # Playwright: smoke, a11y, CSP, theme, SEO, widgets,
+│                         # homepage writing, blog, MDX, links, images
 ├── components.json       # shadcn-svelte config
+├── src/content.config.ts # blog collection schema (glob over .md + .mdx)
+├── docs/writing.md       # publishing guide; templates in docs/templates/
 ├── wrangler.jsonc        # Cloudflare Worker name and dist/ assets
 ├── astro.config.mjs      # site URL and CSP configuration
 ├── playwright.config.ts  # E2E runs against the production build
@@ -49,6 +60,23 @@ Site identity, description, socials, and page copy are centralized in
 homepage; adding a page means adding a key under `pages` and rendering it from a
 matching route under `src/pages/`. Use the `@/` import alias rather than relative
 imports: Biome enforces this.
+
+## Writing
+
+Posts are Markdown (`.md`) or MDX (`.mdx`) files in `src/content/blog/`. The file
+path is the URL slug; frontmatter supplies `title`, `description`, `pubDate`,
+optional `updatedDate`, and `draft`. Drafts never build.
+
+The homepage shows the four newest published posts in a **Writing** section;
+the heading links to `/blog/`, which lists the
+full archive newest first. There is no Blog link in the header by design.
+`/rss.xml` is the feed and `sitemap-index.xml` covers every route.
+
+Four demonstration articles ship in `src/content/blog/` — three Markdown and one
+MDX with a hydrated Svelte demo — so the system can be evaluated end to end.
+They are ordinary posts and can be edited or deleted. See
+[docs/writing.md](./docs/writing.md) for the full authoring contract and
+[docs/templates/](./docs/templates/) for starting files.
 
 Agent instructions for working in this repo live in [AGENTS.md](./AGENTS.md).
 

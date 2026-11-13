@@ -26,10 +26,11 @@ Writing lives as Markdown files committed to this repository and is built by Ast
 
 - Astro 7 with Svelte 5 islands, Tailwind CSS 4, shadcn-svelte components (Bits UI, neutral base color), `@lucide/svelte` icons, Satoshi Variable (Fontshare) as the loaded sans face, and Caveat Variable for the `font-signature` wordmark.
 - Static-first output served as Cloudflare Worker assets; no confirmed server-side runtime features beyond wrangler asset hosting.
-- Confirmed visitor capabilities, all currently unimplemented: read posts, browse projects, use small browser tools, contact mihidana, and learn who mihidana is (about).
-- Publishing mechanism is Markdown in the repo; post structure (taxonomy, drafts, feeds) is not yet decided.
-- Undecided and not to be invented: project list, tool lineup, contact channels, post topics, analytics, RSS/sitemap behavior. The only linked social profile is GitHub (`site.socials.github`).
-- Content is currently limited to a single homepage that renders its intro copy from `src/lib/site.ts`, plus site header, footer, and a light/dark theme toggle. No posts, projects, or tools exist yet.
+- Confirmed visitor capabilities: see the newest writing on the homepage, read the full archive at `/blog/`, open individual posts, use small browser tools, and reach mihidana. Projects, a contact page, and an about page are still unimplemented.
+- Publishing mechanism is Markdown (`.md`) or MDX (`.mdx`) committed to `src/content/blog/`; Astro's content collection validates frontmatter and generates routes, RSS, and sitemap entries at build time.
+- Writing structure is settled: typed frontmatter (`title`, `description`, `pubDate`, optional `updatedDate`, `draft`), path-derived slugs, draft exclusion from every surface, `/rss.xml`, and an `@astrojs/sitemap` sitemap. The homepage carries a **Writing** section with the four newest published posts; the header has no Blog link by design, so the homepage is the entry point. No tags, categories, pagination, search, comments, or newsletter — see `docs/writing.md` for the authoring contract.
+- Undecided and not to be invented: project list, tool lineup, contact channels, post topics, analytics, and per-post social images. The only linked social profile is GitHub (`site.socials.github`).
+- Content: a homepage (intro, widgets, Writing, resources, tech stack), site header/footer, a light/dark theme toggle, and four demonstration articles in `src/content/blog/` — three Markdown and one MDX with a hydrated Svelte demo. They are starter content, not claims about mihidana's history, and can be edited or removed.
 
 ## Brand Commitments
 

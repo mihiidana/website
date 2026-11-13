@@ -1,0 +1,294 @@
+---
+title: "Debouncing in Practice: Understanding It Through an Interactive Example"
+description: What debouncing actually does to a stream of events, how it differs from throttling, and how to implement it without leaking timers or racing responses.
+pubDate: 2026-11-13
+---
+
+Typing in a search box produces an event per keystroke. "Debounce" is the
+technique of waiting until the typing stops before acting. It is a small idea
+with a surprising number of failure modes: stale timers, out-of-order
+responses, and state that updates after the component is gone.
+
+The demo below is the article. Type in it, change the delay, and watch which
+values commit and which are cancelled.
+
+import DebouncePlayground from "@/components/widgets/debounce-playground.svelte";
+
+<DebouncePlayground client:visible />
+
+Everything above this line except the widget itself is static HTML. The
+playground is the only hydrated part of the page — which is the point of the
+islands model described in [the Astro article](/blog/static-first-astro/).
+
+## What debouncing is
+
+Debouncing delays a reaction until a burst of events goes quiet. Each new event
+restarts the wait, so only the last one in a burst causes work.
+
+```js
+function debounce(fn, wait) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), wait);
+  };
+}
+```
+
+Three behaviors follow directly from that code:
+
+1. **The call is postponed**, not skipped. The last call always happens, as
+   long as the stream eventually stops.
+2. **Intermediate calls are dropped.** If someone types ten characters in
+   200 ms, a 300 ms debounce runs the function once.
+3. **The delay is measured from the most recent event**, not the first.
+
+That third point is what distinguishes debouncing from throttling.
+
+## Debouncing versus throttling
+
+| | Debounce | Throttle |
+| --- | --- | --- |
+| Timing | After the burst ends | At a fixed interval |
+| Calls during a burst | One, at the end | One per interval |
+| Best for | Search input, autosave, validation | Scroll position, resize, pointer tracking |
+| Worst for | Anything needing continuous updates | Anything that should wait for a pause |
+
+A scroll handler that debounces at 200 ms feels broken: the layout only settles
+after scrolling stops. A search box that throttles fires requests mid-word. The
+right choice depends on whether the *final* state matters or the *progress*
+does.
+
+> Debounce answers "what did they settle on?" Throttle answers "where are they
+> now?"
+
+## Why it matters for requests
+
+Each keystroke in a search box that triggers a request is a request. For a
+ten-character query typed in a second, that is ten round trips, nine of which
+are obsolete before they return.
+
+Debouncing collapses the burst. It also introduces the second problem: the
+remaining request can still be overtaken by an earlier one that was already in
+flight. Debouncing reduces the race, it does not remove it.
+
+```js
+let controller;
+
+async function search(query) {
+  controller?.abort();
+  controller = new AbortController();
+
+  try {
+    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
+      signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`Search failed: ${response.status}`);
+    render(await response.json());
+  } catch (error) {
+    if (error.name !== "AbortError") report(error);
+  }
+}
+```
+
+Cancelling the previous request is the part people forget. Debouncing without
+abort control still allows an old response to land after a newer one.
+
+## How the timer actually behaves
+
+`setTimeout` does not guarantee a callback at exactly the delay. It schedules
+the callback to run no earlier than that many milliseconds, once the call stack
+is free. Under load, the real delay can be longer.
+
+Two consequences:
+
+- **Do not use a debounce as a deadline.** If something must happen by a
+  certain time, that is a separate requirement.
+- **Zero is not "immediate."** `setTimeout(fn, 0)` still yields to the event
+  loop, so a `0` ms debounce behaves differently from calling `fn` directly.
+
+The return value of `setTimeout` is a handle. Passing it to `clearTimeout` is
+what cancels the pending callback, and cancelling is the entire mechanism.
+
+## Cleanup is the hard part
+
+A timer that outlives its purpose is a leak with side effects: it fires after
+the input changed, or after the component was destroyed, and writes state that
+no longer has a reader.
+
+Every implementation needs an answer to "who cancels this?"
+
+```js
+function useDebouncedValue(value, wait) {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), wait);
+    return () => clearTimeout(id);
+  }, [value, wait]);
+
+  return debounced;
+}
+```
+
+The cleanup function is doing the same job as `clearTimeout` in the first
+snippet, expressed as part of the lifecycle. When `value` changes, the previous
+timer is cancelled before the next one starts.
+
+### Cleanup in Svelte 5
+
+Svelte 5's `$effect` has the same contract: return a function, and it runs
+before the next execution and on teardown.
+
+```svelte
+<script lang="ts">
+  let query = $state("");
+  let settled = $state("");
+
+  $effect(() => {
+    const value = query;
+    const id = setTimeout(() => {
+      settled = value;
+    }, 300);
+
+    return () => clearTimeout(id);
+  });
+</script>
+
+<input bind:value={query} />
+<p>{settled}</p>
+```
+
+That is the whole debounce. The effect reads `query`, so a keystroke re-runs it,
+which cancels the pending timer and schedules a new one.
+
+Two details make it correct in practice:
+
+- **Capture the value inside the effect.** `const value = query` reads the
+  dependency once and uses that snapshot in the callback. Referencing `query`
+  inside the timeout would read whatever it is when the timer fires — the point
+  of debouncing is to act on the value from when the burst paused.
+- **Keep bookkeeping out of reactive state.** The playground tracks a plain
+  `committed` variable so it can skip the initial run without making the effect
+  depend on its own output.
+
+### Counting what was cancelled
+
+The playground also counts cancellations. That requires knowing whether a timer
+fired, which means a flag closed over per effect run:
+
+```ts
+$effect(() => {
+  const value = query;
+  let fired = false;
+
+  const id = setTimeout(() => {
+    fired = true;
+    settled = value;
+  }, delay);
+
+  return () => {
+    clearTimeout(id);
+    if (!fired) cancelled += 1;
+  };
+});
+```
+
+Note that `delay` is read inside the effect too, so moving the slider restarts
+the wait. That is the behavior you want: changing the delay mid-burst should
+apply to the burst in progress.
+
+## Common mistakes
+
+**Reading state inside the timeout.** `setTimeout(() => setDebounced(value))`
+where `value` is reactive reads the newest value, not the one at schedule time.
+Snapshot it first.
+
+**Forgetting cleanup on unmount.** The timer survives the component and writes
+to freed state. In Svelte, returning `clearTimeout(id)` from the effect covers
+both re-runs and teardown.
+
+**Debouncing a required action.** A save that only happens after 500 ms of
+silence loses work if the tab closes during the wait. Pair autosave with a
+flush on `visibilitychange`.
+
+**Debouncing the UI you are typing into.** The input itself must update
+immediately; only the expensive consequence should be delayed. The playground
+shows both values side by side for that reason.
+
+**Using debounce where throttle belongs.** Scroll-linked animation needs a
+steady update rate, not a single update after the scroll ends.
+
+**Assuming one debounce is enough for a race.** Abort the previous request, or
+tag responses with a sequence number and discard out-of-order ones.
+
+## Choosing a delay
+
+There is no universal value, but the trade-off is legible:
+
+- **Under 100 ms** feels immediate; it mostly removes duplicate work from
+  rapid-fire events.
+- **150–300 ms** is the usual range for search-as-you-type. Long enough to
+  collapse typing, short enough not to feel laggy.
+- **400 ms and above** starts to feel like the interface is thinking. Reserve
+  it for actions where the cost of running early is high.
+
+If the operation is cheap, do not debounce it. If it is expensive and the delay
+is noticeable, consider showing that work is pending — the playground's
+"waiting…" indicator exists for that reason.
+
+## When not to use it
+
+Debouncing is the wrong tool when:
+
+- the action must happen for **every** event (analytics, keystroke logging);
+- the action must happen **continuously** (resize-driven layout, animation);
+- the cost is already low enough that the complexity is not repaid;
+- correctness depends on the action happening by a deadline.
+
+In those cases, throttle, batch, or do nothing at all.
+
+## Conclusion
+
+Debouncing is a one-line idea — cancel the previous timer, schedule a new one —
+and most of the engineering is in the edges: snapshot the value, always clean
+up, abort stale requests, and never delay the feedback the user is directly
+manipulating. The interactive example above is deliberately small, but it
+exercises each of those edges.
+
+## Images inside MDX
+
+MDX keeps ordinary Markdown image syntax, so nothing below needs an import
+when the default output is enough:
+
+![A remote image optimized at build time](https://i.imgur.com/6Z4ZQ4M.jpg)
+
+For control over the size or the output format, use Astro's components. They
+render to plain HTML on the server — no island, no hydration:
+
+import { Image, Picture } from "astro:assets";
+import diagram from "@/assets/blog/static-build-strip.png";
+
+<Image src={diagram} alt="A diagram imported explicitly and rendered with a fixed width" width={480} />
+
+<Picture
+  src={diagram}
+  formats={["avif", "webp"]}
+  alt="The same diagram offered as AVIF with a WebP fallback"
+/>
+
+The difference between the two: `Image` picks one format and lets you set
+dimensions, while `Picture` emits a `<picture>` element with one `<source>`
+per requested format and the original as the fallback. Reach for `Picture`
+when the savings matter, and keep the `alt` text just as meaningful either way.
+
+## References
+
+- [MDN: `setTimeout()`](https://developer.mozilla.org/en-US/docs/Web/API/Window/setTimeout)
+- [MDN: `clearTimeout()`](https://developer.mozilla.org/en-US/docs/Web/API/Window/clearTimeout)
+- [MDN: `AbortController`](https://developer.mozilla.org/en-US/docs/Web/API/AbortController)
+- [Svelte: `$effect`](https://svelte.dev/docs/svelte/$effect)
+- [Svelte: Lifecycle hooks](https://svelte.dev/docs/svelte/lifecycle-hooks)
+
+Related: [A Practical Mental Model for Static-First Websites with Astro](/blog/static-first-astro/)
+and [TypeScript Generics Without the Mystery](/blog/typescript-generics/).

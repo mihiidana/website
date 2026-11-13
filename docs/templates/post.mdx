@@ -1,0 +1,27 @@
+---
+title: Post title
+description: One sentence describing what this post covers.
+pubDate: 2026-01-01
+# updatedDate: 2026-01-02
+# draft: true
+---
+
+import Clock from "@/components/widgets/clock.svelte";
+
+Opening paragraph. The `title` above becomes the page `<h1>`, so start body
+headings at `##`.
+
+## A static component
+
+Rendered on the server, no JavaScript shipped:
+
+<Clock />
+
+## An interactive component
+
+Hydrated only when it scrolls into view:
+
+<Clock client:visible />
+
+Astro components work the same way — import them with the `@/` alias and use
+them as tags; they never ship JavaScript.

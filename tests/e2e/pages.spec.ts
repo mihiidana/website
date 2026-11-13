@@ -80,15 +80,17 @@ for (const path of PAGES) {
       await page.getByRole("button", { name: "Toggle color theme" }).click();
       await expect(page.locator("html")).toHaveClass(/dark/);
 
-      // Exercise the Bits UI slider island under CSP.
-      await page.waitForSelector('astro-island[component-url*="music-player"]:not([ssr])');
-      const slider = page.getByRole("slider", { name: /Volume for/ });
-      await expect(slider).toBeVisible();
-      await slider.focus();
-      await page.keyboard.press("ArrowRight");
-      await expect
-        .poll(() => page.evaluate(() => document.querySelector("audio")?.volume))
-        .toBeGreaterThan(0.5);
+      // Exercise the Bits UI slider island under CSP, where the page has one.
+      if ((await page.locator('astro-island[component-url*="music-player"]').count()) > 0) {
+        await page.waitForSelector('astro-island[component-url*="music-player"]:not([ssr])');
+        const slider = page.getByRole("slider", { name: /Volume for/ });
+        await expect(slider).toBeVisible();
+        await slider.focus();
+        await page.keyboard.press("ArrowRight");
+        await expect
+          .poll(() => page.evaluate(() => document.querySelector("audio")?.volume))
+          .toBeGreaterThan(0.5);
+      }
 
       // Violations are recorded in the page; read them after the interactions.
       const violations = await page.evaluate(

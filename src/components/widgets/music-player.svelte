@@ -1,5 +1,6 @@
 <script lang="ts">
 import { Music2, Pause, Play, Volume2, VolumeX } from "@lucide/svelte";
+import { on } from "svelte/events";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,7 +11,7 @@ import { cn } from "@/lib/utils";
 interface Props {
   class?: string;
   track: SiteTrack;
-  /** Pre-optimized artwork URL (build-time processed); falls back to track.artwork. */
+  /** Build-time optimized artwork URL, derived from `artwork`. */
   artwork?: string;
 }
 
@@ -50,6 +51,27 @@ function toggleMute() {
   muted = false;
 }
 
+/**
+ * Volume change per wheel pixel. A mouse notch (deltaY ~100) moves the level
+ * by 0.05, and the per-event clamp keeps a page-mode delta from jumping the
+ * whole range at once.
+ */
+const VOLUME_PER_WHEEL_PIXEL = 0.0005;
+const MAX_WHEEL_VOLUME_STEP = 0.1;
+
+/**
+ * Lowest level the wheel will set, and highest it will set — 1.
+ *
+ * The wheel deliberately never reaches 0 and never engages mute. A silent or
+ * muted player leaves the browser nothing to scroll, so the following wheel
+ * event can arrive non-cancelable, and this handler must refuse those. Wheeling
+ * to true silence would therefore strand the player with no way back except the
+ * slider. Both remain reachable: the slider goes to 0, and the mute button
+ * mutes. The wheel only borrows the same volume state, clamped to a range it
+ * can always leave.
+ */
+const MIN_WHEEL_VOLUME = 0.01;
+
 $effect(() => {
   const audio = audioEl;
   if (!audio) return;
@@ -58,8 +80,16 @@ $effect(() => {
   audio.muted = muted;
 });
 
-// Wheel over the widget adjusts volume; the page keeps scrolling normally,
-// so the listener stays passive.
+// Wheel over the widget adjusts volume and must not scroll the page with it,
+// so the listener is registered non-passive and the default scroll is
+// cancelled synchronously. It is scoped to the player element and removed by
+// the cleanup `on()` returns when the component is destroyed.
+//
+// Ordering matters more than it looks. Every early return below happens BEFORE
+// `preventDefault()`, so a gesture this widget refuses still scrolls the page
+// normally — the widget never swallows input it does not use. And because the
+// volume is only written after `preventDefault()` succeeds, the volume can
+// never change while the page scrolls underneath it.
 $effect(() => {
   const card = cardEl;
   if (!card) return;
@@ -71,18 +101,44 @@ $effect(() => {
     return event.deltaY;
   };
 
-  const onWheel = (event: WheelEvent) => {
-    if (event.ctrlKey) return; // pinch-zoom gesture
-    const dy = pixels(event);
-    if (muted && dy >= 0) return; // already silent, keep the level
+  return on(
+    card,
+    "wheel",
+    (event) => {
+      // Leave pinch-zoom and modified gestures to the browser.
+      if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
+      // Horizontal trackpad gestures are not this widget's business.
+      if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
 
-    const next = Math.min(1, Math.max(0, volume - dy * 0.0005));
-    volume = next;
-    muted = next === 0;
-  };
+      const dy = pixels(event);
+      if (dy === 0) return;
 
-  card.addEventListener("wheel", onWheel, { passive: true });
-  return () => card.removeEventListener("wheel", onWheel);
+      // Already silent: scrolling further down changes nothing, and scrolling
+      // up is the gesture that brings the sound back.
+      if (muted && dy > 0) return;
+
+      // Some browsers emit wheel sequences in which only the first event is
+      // cancelable (https://developer.mozilla.org/en-US/docs/Web/API/Element/wheel_event).
+      // `preventDefault()` on a non-cancelable event is a no-op, so the page
+      // would scroll while the volume followed it. Refuse the event instead:
+      // no page scroll gets cancelled, so no volume change is allowed either.
+      if (!event.cancelable) return;
+
+      // From here the widget owns the vertical gesture: cancel the scroll.
+      event.preventDefault();
+
+      // Only now does the volume change, and it stays inside its range.
+      const step = Math.max(
+        -MAX_WHEEL_VOLUME_STEP,
+        Math.min(MAX_WHEEL_VOLUME_STEP, dy * VOLUME_PER_WHEEL_PIXEL),
+      );
+
+      volume = Math.min(1, Math.max(MIN_WHEEL_VOLUME, volume - step));
+      // Scrolling up is an intentional unmute, matching the slider.
+      if (dy < 0) muted = false;
+    },
+    { passive: false },
+  );
 });
 </script>
 
@@ -135,7 +191,9 @@ $effect(() => {
     </div>
 
     <div class="min-w-0">
-      <h2 class="truncate font-medium text-foreground">{track.title}</h2>
+      <!-- A widget label, not a document section: keeping it out of the
+           heading outline leaves the page hierarchy to the page. -->
+      <p class="truncate font-medium text-foreground">{track.title}</p>
       <p class="truncate text-sm text-muted-foreground">{track.artist}</p>
       <p class="truncate text-xs text-muted-foreground">{track.album}</p>
     </div>

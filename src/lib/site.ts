@@ -21,6 +21,7 @@ export type SiteTrack = {
   title: string;
   artist: string;
   album: string;
+  /** File name of the cover image in `src/assets/`, processed at build time. */
   artwork: string;
   audio: string;
   href: string;
@@ -51,12 +52,22 @@ export type SitePage = {
   };
 };
 
+export type SiteWriting = {
+  title: string;
+  description: string;
+  intro: string;
+  empty: string;
+  feedTitle: string;
+  feedDescription: string;
+};
+
 export type SiteConfig = {
   name: string;
   wordmark: string;
   description: string;
   url: string;
   socials: Readonly<Record<string, string>>;
+  writing: SiteWriting;
   pages: Readonly<Record<string, SitePage>>;
 };
 
@@ -67,6 +78,15 @@ export const site: SiteConfig = {
   url: "https://hey.mihiidana.workers.dev",
   socials: {
     github: "https://github.com/mihiidana",
+  },
+  writing: {
+    title: "Writing",
+    description:
+      "Essays and notes by mihidana on software, craft, and whatever else is worth the words.",
+    intro: "Longer pieces on software, craft, and the things I keep coming back to.",
+    empty: "Nothing published yet. The first piece is on its way.",
+    feedTitle: "mihidana",
+    feedDescription: "Writing by mihidana.",
   },
   pages: {
     home: {
@@ -79,7 +99,10 @@ export const site: SiteConfig = {
           title: "One Trick Phony",
           artist: "Sasha Alex Sloan",
           album: "I Blame The World",
-          artwork: "https://img.youtube.com/vi/kG9qlxLMa0o/maxresdefault.jpg",
+          // Sourced from the track's YouTube thumbnail, stored in `src/assets/`
+          // so Astro's image service processes it like any local image — the
+          // site no longer needs a remote allowlist entry to build.
+          artwork: "music-artwork.jpg",
           audio: "/audio/One_Trick_Phony.mp3",
           href: "https://music.youtube.com/watch?v=kG9qlxLMa0o",
         },
