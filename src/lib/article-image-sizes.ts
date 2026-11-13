@@ -14,14 +14,27 @@
  * (`sizes` is not stripped). Setting it here is therefore the same as passing
  * it in MDX, and `getImage({ sizes })` wins over the computed default.
  *
- * The breakpoint mirrors `src/components/layouts/container.astro`: `max-w-3xl`
- * (768px) with `px-5` (40px) below `sm` and `px-6` (48px) above, leaving 728px
- * and 720px of usable width respectively.
+ * The breakpoint mirrors `src/components/layouts/container.astro`:
+ * `mx-auto w-full max-w-3xl px-5 sm:px-6`. Tailwind's `sm` is 640px, so the
+ * horizontal gutter is 20px per side below that and 24px from 640px up, and
+ * `max-w-3xl` caps the box at 768px — leaving 720px of content at 768px and
+ * above. Widths below are measured from the real container, not assumed.
  */
 import { defineHastPlugin } from "satteri";
 
-/** Usable width of the article body at its widest. */
-const ARTICLE_IMAGE_SIZES = "(min-width: 768px) 720px, calc(100vw - 2.5rem)";
+/**
+ * Rendered width of the article body at each breakpoint:
+ *
+ * - `>= 768px`  → `max-w-3xl` (768px) − `px-6` (48px) = 720px
+ * - `>= 640px`  → viewport − `px-6` (48px)             e.g. 640 → 592px
+ * - below 640px → viewport − `px-5` (40px)             e.g. 390 → 350px
+ *
+ * The middle step is what an earlier `calc(100vw - 2.5rem)` alone got wrong:
+ * between 640px and 767px the gutter is 24px per side, so the image would
+ * advertise 10px more than the column is wide.
+ */
+const ARTICLE_IMAGE_SIZES =
+  "(min-width: 768px) 720px, (min-width: 640px) calc(100vw - 3rem), calc(100vw - 2.5rem)";
 
 export const articleImageSizesPlugin = defineHastPlugin({
   name: "article-image-sizes",

@@ -108,6 +108,109 @@ test("sizes reflects the article column, not the source image width", async ({ p
   expect(sizes).toContain("calc(100vw");
 });
 
+test("sizes matches the measured article width at every breakpoint", async ({ page }) => {
+  await page.goto(`/blog/${usages[0].id}/`);
+
+  // The source of truth is the layout, not the string in the plugin: measure
+  // the real container, then check the `sizes` declaration against it. 640px
+  // is Tailwind's `sm`, where the gutter changes from 20px to 24px per side;
+  // 767/768 straddle the `max-w-3xl` cap.
+  const expected = [
+    // viewport, rendered article content width
+    { width: 390, content: 350 }, // 390 - 2*20
+    { width: 640, content: 592 }, // 640 - 2*24
+    { width: 767, content: 719 }, // 767 - 2*24
+    { width: 768, content: 720 }, // max-w-3xl - 2*24
+    { width: 1280, content: 720 },
+  ];
+
+  for (const { width, content } of expected) {
+    await page.setViewportSize({ width, height: 900 });
+
+    const measured = await page.evaluate(() => {
+      const article = document.querySelector("main#main article");
+      if (!article) return null;
+      const style = getComputedStyle(article);
+      return Math.round(
+        article.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight),
+      );
+    });
+
+    // The image renders at exactly the column width — no overflow, no gap.
+    expect(measured, `${width}px container`).toBe(content);
+
+    const img = page.locator("main#main .prose img").first();
+    await expect(img).toHaveCSS("width", `${content}px`);
+
+    // And the `sizes` declaration tells the browser the same number. Parse the
+    // media-conditioned list the way a browser does: first matching entry wins.
+    const resolved = await page.evaluate(() => {
+      const img = document.querySelector("main#main .prose img");
+      const sizes = img?.getAttribute("sizes") ?? "";
+      const probe = document.createElement("div");
+      probe.style.cssText =
+        "position:absolute;top:0;left:0;margin:0;padding:0;border:0;box-sizing:border-box;visibility:hidden";
+      document.body.appendChild(probe);
+      let value: number | null = null;
+      for (const entry of sizes.split(",").map((part) => part.trim())) {
+        // An entry is either a bare length or `(media condition) <length>`.
+        // The condition itself contains parentheses, so split on the first
+        // `) ` rather than trying to regex the whole thing.
+        const conditioned = entry.match(/^(\(.+?\))\s+(.+)$/);
+        const condition = conditioned?.[1];
+        const length = conditioned ? conditioned[2] : entry;
+        if (condition && !window.matchMedia(condition).matches) continue;
+        probe.style.width = length;
+        value = Math.round(probe.getBoundingClientRect().width);
+        break;
+      }
+      probe.remove();
+      return value;
+    });
+
+    expect(resolved, `${width}px sizes`).toBe(content);
+  }
+});
+
+test("the selected variant is never larger than the rendered image needs", async ({ page }) => {
+  // `sizes` only matters if the browser obeys it: check the variant it actually
+  // picks against the source-set widths, so an understated `sizes` (which would
+  // download a variant wider than the column) fails here.
+  for (const width of [390, 640, 767, 768, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`/blog/${usages[0].id}/`);
+
+    const img = page.locator("main#main .prose img").first();
+    await img.scrollIntoViewIfNeeded();
+    await expect
+      .poll(() => img.evaluate((el) => (el as HTMLImageElement).naturalWidth))
+      .toBeGreaterThan(0);
+
+    const chosen = await img.evaluate((el) => {
+      const image = el as HTMLImageElement;
+      const srcset = image.getAttribute("srcset") ?? "";
+      const widths = srcset
+        .split(",")
+        .map((part) => part.trim().split(/\s+/))
+        .filter(([, descriptor]) => descriptor?.endsWith("w"))
+        .map(([url, descriptor]) => ({ url, width: Number.parseInt(descriptor, 10) }));
+      const match = widths.find(({ url }) =>
+        image.currentSrc.endsWith(url.replace("/_astro/", "")),
+      );
+      return {
+        variantWidth: match?.width ?? image.naturalWidth,
+        rendered: Math.round(image.getBoundingClientRect().width),
+      };
+    });
+
+    // The browser is allowed a modest overshoot for future resizing, but it
+    // must never fetch a variant narrower than the slot (visible blur) and must
+    // not systematically grab the biggest one.
+    expect(chosen.variantWidth, `${width}px`).toBeGreaterThanOrEqual(chosen.rendered);
+    expect(chosen.variantWidth, `${width}px`).toBeLessThanOrEqual(chosen.rendered * 2);
+  }
+});
+
 test("every referenced image file exists in the build output", async ({ page }) => {
   const referenced = new Set<string>();
 

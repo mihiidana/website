@@ -7,6 +7,8 @@
  * instead of after a full build. The important property is negative: arbitrary
  * hosts must pass without appearing in the config anywhere.
  */
+import { readFileSync } from "node:fs";
+
 import { isRemoteAllowed, matchPattern } from "astro/assets/utils";
 import { describe, expect, test } from "vitest";
 
@@ -97,5 +99,34 @@ describe("responsive image configuration", () => {
     // default ladder's 2048–6016px variants would be dead weight.
     expect(Math.max(...breakpoints)).toBeLessThanOrEqual(1280);
     expect(breakpoints).toEqual([...breakpoints].sort((a, b) => a - b));
+  });
+});
+
+describe("article image sizes", () => {
+  test("declares all three layout steps in the order a browser reads them", () => {
+    const source = readFileSync(
+      new URL("../../src/lib/article-image-sizes.ts", import.meta.url),
+      "utf8",
+    );
+    const declared = source.match(/const ARTICLE_IMAGE_SIZES =\s*"([^"]+)"/)?.[1];
+
+    // Pinned literally so a change to the container padding cannot leave the
+    // plugin silently advertising the old width.
+    expect(declared).toBe(
+      "(min-width: 768px) 720px, (min-width: 640px) calc(100vw - 3rem), calc(100vw - 2.5rem)",
+    );
+  });
+
+  test("mirrors the container's padding at each breakpoint", () => {
+    const container = readFileSync(
+      new URL("../../src/components/layouts/container.astro", import.meta.url),
+      "utf8",
+    );
+
+    // The plugin's numbers are derived from this string; if the padding or the
+    // max width changes, the `sizes` declaration above must change with it.
+    expect(container).toContain("max-w-3xl");
+    expect(container).toContain("px-5");
+    expect(container).toContain("sm:px-6");
   });
 });
