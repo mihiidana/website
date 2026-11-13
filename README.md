@@ -40,12 +40,14 @@ Requires Node `>=26.13.0` and pnpm `12.18.0` (`packageManager`).
 │   │   └── blog/         # posts: .md or .mdx, one collection, path = slug
 │   ├── lib/              # site.ts, blog.ts, heading-permalinks.ts,
 │   │                     # article-image-sizes.ts, remote-images.ts, theme.ts, utils.ts
-│   ├── pages/            # file-based routes (index.astro, blog/, rss.xml)
+│   │   └── og/           # social images: specs, paths, Satori template, build gate
+│   ├── pages/            # file-based routes (index.astro, blog/, rss.xml, og/)
 │   └── styles/           # global.css: Tailwind, tokens, fonts; prose.css: articles
 ├── tests
-│   ├── unit/             # vitest: theme, blog helpers/schema, heading permalinks, images
-│   └── e2e/              # Playwright: smoke, a11y, CSP, theme, SEO, widgets,
-│                         # homepage writing, blog, MDX, links, images
+│   ├── unit/             # vitest: theme, blog helpers/schema, heading permalinks,
+│   │                     # images, social image paths
+│   └── e2e/              # Playwright: smoke, a11y, CSP, theme, SEO, social images,
+│                         # widgets, homepage writing, blog, MDX, links, images
 ├── components.json       # shadcn-svelte config
 ├── src/content.config.ts # blog collection schema (glob over .md + .mdx)
 ├── docs/writing.md       # publishing guide; templates in docs/templates/
@@ -71,6 +73,12 @@ The homepage shows the four newest published posts in a **Writing** section;
 the heading links to `/blog/`, which lists the
 full archive newest first. There is no Blog link in the header by design.
 `/rss.xml` is the feed and `sitemap-index.xml` covers every route.
+
+Every public page also gets a generated 1200×630 social image at build time
+(`/og/home.png`, `/og/blog.png`, `/og/blog/<slug>.png`), rendered by Satori from
+the page's own title and description and rasterized with sharp. The build fails
+if any page is missing one. See
+[AGENTS.md](./AGENTS.md#rules) → Open Graph images.
 
 Four demonstration articles ship in `src/content/blog/` — three Markdown and one
 MDX with a hydrated Svelte demo — so the system can be evaluated end to end.

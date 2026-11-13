@@ -16,7 +16,6 @@ interface Props {
   type?: "website" | "article";
   publishedTime?: string;
   modifiedTime?: string;
-  image?: string;
 }
 
 const {
@@ -25,7 +24,6 @@ const {
   type,
   publishedTime,
   modifiedTime,
-  image,
 } = Astro.props;
 
 // Pre-paint theme bootstrap: applies the persisted (or default dark) theme
@@ -78,7 +76,6 @@ Astro.csp?.insertScriptHash(`sha256-${bootstrapHash}`);
       type={type}
       publishedTime={publishedTime}
       modifiedTime={modifiedTime}
-      image={image}
     />
     <script is:inline set:html={themeBootstrap} />
     <Font cssVariable="--font-satoshi" preload />

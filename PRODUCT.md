@@ -29,7 +29,8 @@ Writing lives as Markdown files committed to this repository and is built by Ast
 - Confirmed visitor capabilities: see the newest writing on the homepage, read the full archive at `/blog/`, open individual posts, use small browser tools, and reach mihidana. Projects, a contact page, and an about page are still unimplemented.
 - Publishing mechanism is Markdown (`.md`) or MDX (`.mdx`) committed to `src/content/blog/`; Astro's content collection validates frontmatter and generates routes, RSS, and sitemap entries at build time.
 - Writing structure is settled: typed frontmatter (`title`, `description`, `pubDate`, optional `updatedDate`, `draft`), path-derived slugs, draft exclusion from every surface, `/rss.xml`, and an `@astrojs/sitemap` sitemap. The homepage carries a **Writing** section with the four newest published posts; the header has no Blog link by design, so the homepage is the entry point. No tags, categories, pagination, search, comments, or newsletter — see `docs/writing.md` for the authoring contract.
-- Undecided and not to be invented: project list, tool lineup, contact channels, post topics, analytics, and per-post social images. The only linked social profile is GitHub (`site.socials.github`).
+- Every public page gets a generated 1200×630 social image at build time (Satori + sharp, output under `/og/`), derived from that page's own title and description: homepage, `/blog/`, and each published article. No hand-made per-article artwork, no runtime generation, no external image service.
+- Undecided and not to be invented: project list, tool lineup, contact channels, post topics, and analytics. The only linked social profile is GitHub (`site.socials.github`).
 - Content: a homepage (intro, widgets, Writing, resources, tech stack), site header/footer, a light/dark theme toggle, and four demonstration articles in `src/content/blog/` — three Markdown and one MDX with a hydrated Svelte demo. They are starter content, not claims about mihidana's history, and can be edited or removed.
 
 ## Brand Commitments
@@ -37,6 +38,7 @@ Writing lives as Markdown files committed to this repository and is built by Ast
 - Public identity: `mihidana`; domain `https://hey.mihiidana.workers.dev`.
 - An existing favicon and PWA icon set plus `site.webmanifest` under `public/` use the name mihidana and must not be replaced with a different identity without an explicit rebrand.
 - Visual identity in code: the `md` wordmark in Caveat Variable (`font-signature`), a neutral monochrome shadcn token palette, and a dark theme by default with a persisted light/dark toggle. No logo mark or broader voice guideline has been established.
+- Social cards follow the same identity: dark monochrome, Satoshi with Caveat wordmark, the site's own copy, and no invented facts — each card states only the page's title, description, date, and the real domain.
 
 ## Evidence on Hand
 
