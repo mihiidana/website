@@ -47,7 +47,9 @@ const writing = recentPosts(await getCollection("blog"));
   {widgets && (
     <div class="mt-12 grid auto-rows-fr grid-cols-12 gap-3.5">
       <div class="col-span-12 grid min-w-0 md:col-span-6">
-        <MusicPlayer client:visible track={widgets.music} artwork={optimizedArtwork} />
+        {optimizedArtwork && (
+          <MusicPlayer client:visible track={widgets.music} artwork={optimizedArtwork} />
+        )}
       </div>
       <div class="col-span-12 flex gap-3.5 md:contents">
         <div class="grid min-w-0 flex-1 md:col-span-3">
@@ -60,29 +62,9 @@ const writing = recentPosts(await getCollection("blog"));
     </div>
   )}
 
-  {(writing.length > 0 || page.sections.length > 0 || resources || techStack) && (
+  {(writing.length > 0 || resources || techStack) && (
     <div class="mt-14 flex flex-col gap-10">
       {writing.length > 0 && <Writing posts={writing} />}
-      {page.sections.map((section) => (
-        <section class="border-t pt-6">
-          <h2 class="text-2xl font-semibold tracking-tight">{section.heading}</h2>
-          <p class="mt-2 max-w-xl text-pretty text-muted-foreground">{section.body}</p>
-          {section.links && section.links.length > 0 && (
-            <ul class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-              {section.links.map((link) => (
-                <li>
-                  <a
-                    href={link.href}
-                    class="underline underline-offset-4 transition-colors hover:text-muted-foreground focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-                  >
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      ))}
       {resources && <Resources heading={resources.heading} items={resources.items} />}
       {techStack && <TechCraft heading={techStack.heading} items={techStack.items} />}
     </div>

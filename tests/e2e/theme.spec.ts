@@ -7,16 +7,22 @@ test("the theme toggle switches, persists, and survives a reload", async ({ page
   await expect(page.locator("html")).toHaveClass(/dark/);
   await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#0a0a0a");
 
-  await page.getByRole("button", { name: "Toggle color theme" }).click();
+  const toggle = page.getByRole("button", { name: "Dark theme" });
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+
+  await toggle.click();
   await expect(page.locator("html")).not.toHaveClass(/dark/);
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
   await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#ffffff");
   expect(await page.evaluate(() => localStorage.getItem("theme"))).toBe("light");
 
   await page.reload();
   await expect(page.locator("html")).not.toHaveClass(/dark/);
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
 
-  await page.getByRole("button", { name: "Toggle color theme" }).click();
+  await toggle.click();
   await expect(page.locator("html")).toHaveClass(/dark/);
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#0a0a0a");
   expect(await page.evaluate(() => localStorage.getItem("theme"))).toBe("dark");
 });
@@ -63,7 +69,7 @@ test("blocked storage keeps the dark default and the toggle still works", async 
   await expect(page.locator("html")).toHaveClass(/dark/);
 
   // The toggle must still change the theme for this page view.
-  await page.getByRole("button", { name: "Toggle color theme" }).click();
+  await page.getByRole("button", { name: "Dark theme" }).click();
   await expect(page.locator("html")).not.toHaveClass(/dark/);
   await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute("content", "#ffffff");
 });

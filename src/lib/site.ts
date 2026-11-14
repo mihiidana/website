@@ -1,19 +1,12 @@
 /**
  * Single source of truth for site identity and copy.
  *
- * Change the homepage here: edit `pages.home` or add a section to its
- * `sections` array. Adding another page means adding a key under `pages`
- * and rendering it from the matching route.
+ * Change the homepage here: edit `pages.home`. Adding another page means
+ * adding a key under `pages` and rendering it from the matching route.
  */
 export type SiteLink = {
   label: string;
   href: string;
-};
-
-export type SiteSection = {
-  heading: string;
-  body: string;
-  links?: readonly SiteLink[];
 };
 
 export type SiteTrack = {
@@ -21,8 +14,6 @@ export type SiteTrack = {
   title: string;
   artist: string;
   album: string;
-  /** File name of the cover image in `src/assets/`, processed at build time. */
-  artwork: string;
   audio: string;
   href: string;
 };
@@ -53,7 +44,6 @@ export type SitePage = {
   /** Small label above the title on the generated social card. */
   eyebrow?: string;
   intro: string;
-  sections: readonly SiteSection[];
   widgets?: SiteWidgets;
   resources?: {
     heading: string;
@@ -174,15 +164,10 @@ export const site: SiteConfig = {
           title: "One Trick Phony",
           artist: "Sasha Alex Sloan",
           album: "I Blame The World",
-          // Sourced from the track's YouTube thumbnail, stored in `src/assets/`
-          // so Astro's image service processes it like any local image — the
-          // site no longer needs a remote allowlist entry to build.
-          artwork: "music-artwork.jpg",
           audio: "/audio/One_Trick_Phony.mp3",
           href: "https://music.youtube.com/watch?v=kG9qlxLMa0o",
         },
       },
-      sections: [],
       resources: {
         heading: "Resources that shaped how I think",
         items: [
@@ -225,5 +210,5 @@ export const site: SiteConfig = {
     },
   },
   // Typed as SiteConfig (not `as const`): the annotation gives empty arrays
-  // like `sections: []` the declared element type instead of `never[]`.
+  // like `noindexRoutes: []` the declared element type instead of `never[]`.
 };

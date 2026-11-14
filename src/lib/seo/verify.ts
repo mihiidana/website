@@ -311,11 +311,25 @@ function collectJsonLd(
   const scan = (value: unknown, key: string): void => {
     if (typeof value === "string") {
       if (key === "sameAs" || key === "@context" || value === "https://schema.org") return;
-      if (/^http:\/\//i.test(value) || /localhost|127\.0\.0\.1/i.test(value)) {
+      // Only absolute URLs are URLs. Any other string is content, and content
+      // may legitimately mention "localhost" while describing a dev server.
+      if (!/^https?:\/\//i.test(value)) return;
+      let url: URL;
+      try {
+        url = new URL(value);
+      } catch {
+        add(`JSON-LD contains an invalid URL: ${value}`);
+        return;
+      }
+      if (
+        url.protocol !== "https:" ||
+        url.hostname === "localhost" ||
+        url.hostname === "127.0.0.1"
+      ) {
         add(`JSON-LD contains a non-production URL: ${value}`);
         return;
       }
-      if (value.startsWith("https://") && !value.startsWith(`${ORIGIN}/`) && value !== ORIGIN) {
+      if (url.origin !== ORIGIN) {
         add(`JSON-LD URL is not on the production origin: ${value}`);
       }
       return;
@@ -341,6 +355,19 @@ export async function verifySeo({ distDir }: { distDir: string }): Promise<SeoVe
   const add = (route: string, message: string): void => {
     problems.push({ route, message });
   };
+
+  // Every page references the same brand assets, so resolve each path once
+  // instead of stat-ing it again per page.
+  const existsCache = new Map<string, boolean>();
+  const exists = async (pathname: string): Promise<boolean> => {
+    const key = decodeURIComponent(pathname);
+    const cached = existsCache.get(key);
+    if (cached !== undefined) return cached;
+    const result = await fileExists(distDir, pathname);
+    existsCache.set(key, result);
+    return result;
+  };
+  const manifestCache = new Map<string, unknown>();
 
   const htmlFiles = await listHtml(distDir);
   if (htmlFiles.length === 0) {
@@ -768,23 +795,34 @@ export async function verifySeo({ distDir }: { distDir: string }): Promise<SeoVe
     if (icons.length === 0) addPage("missing favicon links");
     for (const icon of icons) {
       if (!icon.href) continue;
-      if (icon.href.startsWith("/") && !(await fileExists(distDir, icon.href))) {
+      if (icon.href.startsWith("/") && !(await exists(icon.href))) {
         addPage(`favicon ${icon.href} does not exist in dist/`);
       }
     }
     const apple = page.links.find((link) => link.rel.includes("apple-touch-icon"));
-    if (!apple?.href || !(await fileExists(distDir, apple.href))) {
+    if (!apple?.href || !(await exists(apple.href))) {
       addPage("apple-touch-icon is missing or does not exist in dist/");
     }
     const manifest = page.links.find((link) => link.rel.includes("manifest"));
     const manifestHref = manifest?.href;
-    if (!manifestHref || !(await fileExists(distDir, manifestHref))) {
+    if (!manifestHref || !(await exists(manifestHref))) {
       addPage("web manifest is missing or does not exist in dist/");
     } else {
-      try {
-        const data = JSON.parse(
-          await readFile(join(distDir, manifestHref.replace(/^\//, "")), "utf8"),
-        ) as {
+      let manifestData = manifestCache.get(manifestHref);
+      if (manifestData === undefined) {
+        try {
+          manifestData = JSON.parse(
+            await readFile(join(distDir, manifestHref.replace(/^\//, "")), "utf8"),
+          );
+        } catch {
+          manifestData = null;
+        }
+        manifestCache.set(manifestHref, manifestData);
+      }
+      if (manifestData === null) {
+        addPage("web manifest is not valid JSON");
+      } else {
+        const data = manifestData as {
           name?: string;
           icons?: { src?: string }[];
         };
@@ -793,13 +831,11 @@ export async function verifySeo({ distDir }: { distDir: string }): Promise<SeoVe
           addPage("web manifest has no icons");
         } else {
           for (const icon of data.icons) {
-            if (!icon.src?.startsWith("/") || !(await fileExists(distDir, icon.src))) {
+            if (!icon.src?.startsWith("/") || !(await exists(icon.src))) {
               addPage(`web manifest icon ${icon.src ?? "(missing src)"} does not exist in dist/`);
             }
           }
         }
-      } catch {
-        addPage("web manifest is not valid JSON");
       }
     }
 
@@ -943,7 +979,7 @@ export async function verifySeo({ distDir }: { distDir: string }): Promise<SeoVe
   }
 
   // RSS is advertised on every page; make sure it exists.
-  if (!(await fileExists(distDir, "/rss.xml"))) add("/rss.xml", "RSS feed was not generated");
+  if (!(await exists("/rss.xml"))) add("/rss.xml", "RSS feed was not generated");
 
   if (problems.length > 0) {
     const grouped = new Map<string, string[]>();

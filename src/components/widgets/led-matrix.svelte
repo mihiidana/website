@@ -112,6 +112,9 @@ $effect(() => {
   const onPointerLeave = () => {
     hoverX = -1;
     hoverY = -1;
+    // Under reduced motion no frame loop runs, so the last pointermove may be
+    // the only paint that ever showed the highlight.
+    if (!frame) render(0);
   };
 
   const resizeObserver = new ResizeObserver(() => {

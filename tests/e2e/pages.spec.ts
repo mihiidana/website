@@ -77,7 +77,7 @@ for (const path of PAGES) {
 
       // The bundled theme toggle must run.
       await page.waitForSelector('astro-island[component-url*="mode-toggle"]:not([ssr])');
-      await page.getByRole("button", { name: "Toggle color theme" }).click();
+      await page.getByRole("button", { name: "Dark theme" }).click();
       await expect(page.locator("html")).toHaveClass(/dark/);
 
       // Exercise the Bits UI slider island under CSP, where the page has one.

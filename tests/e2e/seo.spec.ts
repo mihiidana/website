@@ -1,52 +1,9 @@
-import { readdir, readFile } from "node:fs/promises";
-import { join, relative } from "node:path";
-
 import { expect, test } from "@playwright/test";
 
 import { site } from "../../src/lib/site";
+import { builtPages, decodeHtml, jsonLd, meta } from "./dist";
 
-const DIST = new URL("../../dist/", import.meta.url);
 const ORIGIN = new URL(site.url).origin;
-
-type BuiltPage = { route: string; html: string };
-
-async function builtPages(): Promise<BuiltPage[]> {
-  const entries = await readdir(DIST, { recursive: true, withFileTypes: true });
-  const pages: BuiltPage[] = [];
-
-  for (const entry of entries) {
-    if (!entry.isFile() || !entry.name.endsWith(".html")) continue;
-    const file = join(entry.parentPath, entry.name);
-    const path = relative(DIST.pathname, file).replaceAll("\\", "/");
-    if (path === "404.html") continue;
-    pages.push({
-      route: `/${path}`.replace(/index\.html$/, ""),
-      html: await readFile(file, "utf8"),
-    });
-  }
-
-  return pages.sort((a, b) => a.route.localeCompare(b.route));
-}
-
-function meta(html: string, key: string): string | undefined {
-  const byProperty = html.match(new RegExp(`<meta property="${key}" content="([^"]*)"`))?.[1];
-  return byProperty ?? html.match(new RegExp(`<meta name="${key}" content="([^"]*)"`))?.[1];
-}
-
-function decodeHtml(value: string): string {
-  return value
-    .replaceAll("&amp;", "&")
-    .replaceAll("&quot;", '"')
-    .replaceAll("&#39;", "'")
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">");
-}
-
-function jsonLd(html: string): { "@graph": Record<string, unknown>[] } {
-  const payload = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)?.[1];
-  expect(payload, "JSON-LD script").toBeTruthy();
-  return JSON.parse(payload ?? "");
-}
 
 const pages = await builtPages();
 

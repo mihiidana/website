@@ -14,7 +14,7 @@ export const GET: APIRoute = async (context) => {
     site: context.site ?? site.url,
     // Matches the `directory` build format: every page lives at `/path/`.
     trailingSlash: true,
-    customData: "<language>en</language>",
+    customData: `<language>${site.seo.lang}</language>`,
     items: posts.map((post) => ({
       title: post.data.title,
       description: post.data.description,

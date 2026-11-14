@@ -1,9 +1,8 @@
-import { readdir, readFile } from "node:fs/promises";
-
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 
 import { site } from "../../src/lib/site";
+import { discoverPosts, sortPosts } from "./content";
 
 /**
  * Homepage Writing section and header behavior.
@@ -12,36 +11,10 @@ import { site } from "../../src/lib/site";
  * real branch content: the section shows the newest four published posts and
  * disappears entirely when the collection is empty.
  */
-const CONTENT_DIR = new URL("../../src/content/blog/", import.meta.url);
 const RECENT_LIMIT = 4;
 
-type Post = { id: string; draft: boolean; pubDate: string; title: string };
-
-async function discoverPosts(): Promise<Post[]> {
-  const files = (await readdir(CONTENT_DIR, { recursive: true })).filter(
-    (file) => file.endsWith(".md") || file.endsWith(".mdx"),
-  );
-
-  const posts: Post[] = [];
-  for (const file of files) {
-    const source = await readFile(new URL(file, CONTENT_DIR), "utf8");
-    const frontmatter = source.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? "";
-    const field = (name: string) =>
-      frontmatter.match(new RegExp(`^${name}:\\s*(.+)$`, "m"))?.[1]?.replace(/^["']|["']$/g, "");
-    posts.push({
-      id: file.replace(/\.mdx?$/, "").replaceAll("\\", "/"),
-      draft: field("draft") === "true",
-      pubDate: field("pubDate") ?? "",
-      title: field("title") ?? "",
-    });
-  }
-  return posts;
-}
-
 const posts = await discoverPosts();
-const published = posts
-  .filter((post) => !post.draft)
-  .sort((a, b) => Date.parse(b.pubDate) - Date.parse(a.pubDate) || a.id.localeCompare(b.id));
+const published = sortPosts(posts.filter((post) => !post.draft));
 const recent = published.slice(0, RECENT_LIMIT);
 
 const WRITING_SECTION = "section[aria-labelledby='writing-heading']";
@@ -63,7 +36,7 @@ test("the wordmark still links home and the theme toggle still works", async ({ 
   await expect(page.getByRole("link", { name: `${site.name} home` })).toHaveAttribute("href", "/");
 
   await expect(page.locator("html")).toHaveClass(/dark/);
-  await page.getByRole("button", { name: "Toggle color theme" }).click();
+  await page.getByRole("button", { name: "Dark theme" }).click();
   await expect(page.locator("html")).not.toHaveClass(/dark/);
 });
 
