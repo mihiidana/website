@@ -1,0 +1,31 @@
+---
+/**
+ * Technical 404 response, written by Astro to `dist/404.html` and served by
+ * Cloudflare through `assets.not_found_handling: "404-page"`. It uses the
+ * shared layout for the header, footer, theme bootstrap, and typography, but it
+ * is not a public route: copy lives in `site.notFound`, the layout emits
+ * `noindex, nofollow`, and no social card is generated.
+ */
+import Layout from "@/components/layouts/Layout.astro";
+import { Button } from "@/components/ui/button";
+import { site } from "@/lib/site";
+
+const copy = site.notFound;
+---
+
+<Layout title={copy.title} description={copy.description} noindex>
+  <div class="flex min-h-[60svh] flex-col justify-center gap-6">
+    <p class="font-mono text-xs tracking-widest text-muted-foreground uppercase">{copy.label}</p>
+
+    <div class="flex max-w-xl flex-col gap-4">
+      <h1 class="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+        {copy.heading}
+      </h1>
+      <p class="text-pretty text-lg text-muted-foreground">{copy.body}</p>
+    </div>
+
+    <div>
+      <Button href={copy.home.href} class="h-10 px-4">{copy.home.label}</Button>
+    </div>
+  </div>
+</Layout>

@@ -55,6 +55,25 @@ export type SitePage = {
   };
 };
 
+/**
+ * Copy for the technical 404 response. It is not a public route: it never
+ * enters `site.pages`, the sitemap, or the social-image registry.
+ */
+export type SiteNotFound = {
+  /** Visible status marker above the heading. */
+  label: string;
+  /** Document title base; the site-name suffix is appended centrally. */
+  title: string;
+  /** Meta description for the error response. */
+  description: string;
+  /** Visible page heading. */
+  heading: string;
+  /** One sentence explaining what happened, in the site's voice. */
+  body: string;
+  /** The single way back into the site. */
+  home: SiteLink;
+};
+
 export type SiteWriting = {
   /** Canonical archive route. Drives the generated OG image path. */
   route: string;
@@ -115,6 +134,7 @@ export type SiteConfig = {
   socials: Readonly<Record<string, string>>;
   seo: SiteSeo;
   writing: SiteWriting;
+  notFound: SiteNotFound;
   pages: Readonly<Record<string, SitePage>>;
 };
 
@@ -148,6 +168,14 @@ export const site: SiteConfig = {
     empty: "Nothing published yet. The first piece is on its way.",
     feedTitle: "mihidana",
     feedDescription: "Writing by mihidana.",
+  },
+  notFound: {
+    label: "404",
+    title: "404",
+    description: "This page doesn't exist. The link may be broken, or the page may have moved.",
+    heading: "This page wandered off.",
+    body: "The link may be broken, or the page moved. Nothing is wrong on your end — the rest of the site is still where you left it.",
+    home: { label: "Home", href: "/" },
   },
   pages: {
     home: {
