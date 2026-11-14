@@ -89,9 +89,9 @@ structured-data graph from the same data. The homepage uses
 and the web manifest are generated from `site.ts`; `@astrojs/sitemap` emits only
 indexable pages. A page marked `noindex` must also be registered in
 `site.seo.noindexRoutes`. The technical 404 page is the one exception: it ships
-`noindex, nofollow` without joining that registry, is exempt from page
-metadata and social cards, and never enters the sitemap. `wrangler.jsonc` sets
-`assets.not_found_handling: "404-page"` so Cloudflare serves `dist/404.html`
+`noindex, nofollow` without joining that registry, omits the canonical URL,
+structured data, and social card, and never enters the sitemap. `wrangler.jsonc`
+sets `assets.not_found_handling: "404-page"` so Cloudflare serves `dist/404.html`
 for unknown URLs.
 
 `pnpm check:seo` also reports metadata-length warnings (titles outside 30–70

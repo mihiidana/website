@@ -84,6 +84,22 @@ describe("page metadata", () => {
     expect(seo.twitter.card).toBe("summary");
   });
 
+  test("technical 404s keep noindex but drop the canonical and structured-data inputs", () => {
+    const seo = buildPageSeo({
+      route: "/404/",
+      title: "404",
+      description: "This page doesn't exist.",
+      isNotFound: true,
+    });
+
+    expect(seo.isNotFound).toBe(true);
+    expect(seo.noindex).toBe(true);
+    expect(seo.canonical).toBeUndefined();
+    expect(seo.image).toBeUndefined();
+    expect(seo.twitter.card).toBe("summary");
+    expect(() => buildStructuredData(seo)).toThrow(/canonical/);
+  });
+
   test("never invents a twitter:site when the config has no handle", () => {
     const seo = buildPageSeo({ route: "/", title: "Home", description: "Home." });
     expect(seo.twitter.site).toBeUndefined();

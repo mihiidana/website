@@ -70,8 +70,10 @@ export type SiteNotFound = {
   heading: string;
   /** One sentence explaining what happened, in the site's voice. */
   body: string;
-  /** The single way back into the site. */
+  /** The primary way back into the site. */
   home: SiteLink;
+  /** A secondary path into the writing archive. */
+  writing: SiteLink;
 };
 
 export type SiteWriting = {
@@ -176,6 +178,7 @@ export const site: SiteConfig = {
     heading: "This page wandered off.",
     body: "The link may be broken, or the page moved. Nothing is wrong on your end — the rest of the site is still where you left it.",
     home: { label: "Home", href: "/" },
+    writing: { label: "Browse writing", href: "/blog/" },
   },
   pages: {
     home: {

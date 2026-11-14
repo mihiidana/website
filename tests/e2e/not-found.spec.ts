@@ -43,32 +43,46 @@ test("an unknown URL serves the custom 404 page with a 404 status", async ({ pag
   await expect(page.getByText(COPY.label, { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(COPY.heading);
   await expect(page.getByText(COPY.body)).toBeVisible();
-  await expect(page.getByRole("link", { name: COPY.home.label, exact: true })).toHaveAttribute(
-    "href",
-    COPY.home.href,
-  );
+  for (const link of [COPY.home, COPY.writing]) {
+    await expect(page.getByRole("link", { name: link.label, exact: true })).toHaveAttribute(
+      "href",
+      link.href,
+    );
+  }
 
   expect(errors).toEqual([]);
 });
 
-test("the home link works from the keyboard", async ({ page }) => {
-  await page.goto(MISSING);
-  const home = page.getByRole("link", { name: COPY.home.label, exact: true });
+test("both navigation links work from the keyboard", async ({ page }) => {
+  const destinations = [
+    { link: COPY.home, heading: site.pages.home.title },
+    { link: COPY.writing, heading: site.writing.title },
+  ];
 
-  await home.focus();
-  await expect(home).toBeFocused();
-  await page.keyboard.press("Enter");
+  for (const { link, heading } of destinations) {
+    await page.goto(MISSING);
+    const target = page.getByRole("link", { name: link.label, exact: true });
 
-  await expect(page).toHaveURL("/");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(site.pages.home.title);
+    await target.focus();
+    await expect(target).toBeFocused();
+    await page.keyboard.press("Enter");
+
+    await expect(page).toHaveURL(link.href);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(heading);
+  }
 });
 
-test("the 404 response is noindex and advertises no social image", async ({ page }) => {
+test("the 404 response keeps noindex but suppresses canonical and structured data", async ({
+  page,
+}) => {
   const response = await page.goto(MISSING);
   expect(response?.status()).toBe(404);
 
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", "noindex, nofollow");
   await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute("content", "summary");
+  expect(await page.locator('link[rel="canonical"]').count()).toBe(0);
+  expect(await page.locator('script[type="application/ld+json"]').count()).toBe(0);
+  expect(await page.locator('meta[property="og:url"]').count()).toBe(0);
   expect(await page.locator('meta[property="og:image"]').count()).toBe(0);
   expect(await page.locator('meta[name="twitter:image"]').count()).toBe(0);
 });
@@ -78,8 +92,11 @@ test("404.html is emitted, unindexed, and absent from the sitemap", async ({ pag
 
   expect(meta(html, "description")).toBe(COPY.description);
   expect(meta(html, "robots")).toBe("noindex, nofollow");
+  expect(meta(html, "og:url")).toBeUndefined();
   expect(meta(html, "og:image")).toBeUndefined();
   expect(meta(html, "twitter:image")).toBeUndefined();
+  expect(html).not.toContain('rel="canonical"');
+  expect(html).not.toContain('type="application/ld+json"');
 
   const sitemap = await (await page.request.get("/sitemap-0.xml")).text();
   expect(sitemap).not.toContain(`${site.url}/404/`);
