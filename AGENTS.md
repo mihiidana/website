@@ -23,7 +23,7 @@ Run `pnpm validate` — or at minimum `pnpm check`, `pnpm typecheck`, and `pnpm 
 
 ## Where things live
 
-- `src/lib/site.ts` — single source of truth for identity, description, socials, locale, Twitter card policy, the noindex registry, metadata-length exceptions, and page copy. Pages render from it; never hardcode user-facing copy in components. Adding a page means a key under `pages`, a route under `src/pages/`, an explicit `<Layout>` title/description, an OG spec, and an entry in `tests/e2e/site.ts`.
+- `src/lib/site.ts` — single source of truth for runtime identity, description, socials, locale, Twitter card policy, the noindex registry, metadata-length exceptions, and page copy. `src/lib/site.types.ts` holds the TypeScript types for that configuration; `site.ts` re-exports them so `@/lib/site` stays the import path. Pages render from it; never hardcode user-facing copy in components. Adding a page means a key under `pages`, a route under `src/pages/`, an explicit `<Layout>` title/description, an OG spec, and an entry in `tests/e2e/site.ts`.
 - `src/pages/` — routes. Keep them thin: source config, render components, no business logic.
 - `src/components/layouts/` — `Layout.astro` (head, theme bootstrap, page chrome) plus header, footer, container, and `mode-toggle.svelte`.
 - `src/components/sections/` — composed page sections driven by `site.ts` data. Astro components that render server-side.

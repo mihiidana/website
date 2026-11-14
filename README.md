@@ -37,8 +37,9 @@ Requires Node `>=26.13.0` and pnpm `12.18.0` (`packageManager`).
 │   │                     # blog/ images shared across posts)
 │   ├── content/
 │   │   └── blog/         # posts: .md or .mdx, one collection, path = slug
-│   ├── lib/              # site.ts, seo.ts, blog.ts, heading-permalinks.ts,
-│   │                     # article-image-sizes.ts, remote-images.ts, theme.ts, utils.ts
+│   ├── lib/              # site.ts (runtime config) + site.types.ts, seo.ts,
+│   │                     # blog.ts, heading-permalinks.ts, article-image-sizes.ts,
+│   │                     # remote-images.ts, theme.ts, utils.ts
 │   │   ├── seo/          # structured data, build validator, build integration
 │   │   └── og/           # social images: specs, paths, Satori template
 │   ├── pages/            # routes (index, 404, blog/, rss.xml, robots.txt,
@@ -59,7 +60,9 @@ Requires Node `>=26.13.0` and pnpm `12.18.0` (`packageManager`).
 ```
 
 Site identity, description, socials, locale, SEO policy, and page copy are
-centralized in [`src/lib/site.ts`](./src/lib/site.ts). Edit `site.pages.home` to
+centralized in [`src/lib/site.ts`](./src/lib/site.ts); its type definitions live
+in [`src/lib/site.types.ts`](./src/lib/site.types.ts) and are re-exported from
+`site.ts`. Edit `site.pages.home` to
 change the homepage; adding a page means adding one entry under `pages` with its
 `route`, `title`, `description`, and optional `seoTitle`, then rendering it from
 a matching route under `src/pages/` through `Layout.astro` with the same
