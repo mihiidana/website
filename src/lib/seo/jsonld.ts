@@ -27,14 +27,19 @@ export type JsonLdGraph = {
 };
 
 export function buildStructuredData(seo: PageSeo): JsonLdGraph {
+  const canonical = seo.canonical;
+  if (!canonical) {
+    throw new Error(`Structured data requires a canonical URL for ${seo.route}`);
+  }
+
   const origin = seo.origin;
   const websiteId = `${origin}/#website`;
   const personId = `${origin}/#person`;
-  const pageId = `${seo.canonical}#webpage`;
-  const articleId = `${seo.canonical}#article`;
-  const breadcrumbId = `${seo.canonical}#breadcrumb`;
-  const itemListId = `${seo.canonical}#items`;
-  const imageId = `${seo.canonical}#primaryimage`;
+  const pageId = `${canonical}#webpage`;
+  const articleId = `${canonical}#article`;
+  const breadcrumbId = `${canonical}#breadcrumb`;
+  const itemListId = `${canonical}#items`;
+  const imageId = `${canonical}#primaryimage`;
 
   const sameAs = Object.values(site.socials).filter((value) => value.length > 0);
 
@@ -63,7 +68,7 @@ export function buildStructuredData(seo: PageSeo): JsonLdGraph {
   const page: JsonLdNode = {
     "@type": isCollection ? "CollectionPage" : "WebPage",
     "@id": pageId,
-    url: seo.canonical,
+    url: canonical,
     name: seo.title,
     description: seo.description,
     isPartOf: { "@id": websiteId },
@@ -94,7 +99,7 @@ export function buildStructuredData(seo: PageSeo): JsonLdGraph {
       "@id": articleId,
       headline: seo.headline,
       description: seo.description,
-      url: seo.canonical,
+      url: canonical,
       mainEntityOfPage: { "@id": pageId },
       datePublished: seo.publishedTime,
       ...(seo.modifiedTime ? { dateModified: seo.modifiedTime } : {}),

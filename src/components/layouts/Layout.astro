@@ -18,8 +18,17 @@ import { THEME_COLORS, THEME_STORAGE_KEY } from "@/lib/theme";
  */
 interface Props extends Omit<PageSeoInput, "route"> {}
 
-const { title, description, type, noindex, publishedTime, modifiedTime, breadcrumbs, items } =
-  Astro.props;
+const {
+  title,
+  description,
+  type,
+  noindex,
+  isNotFound,
+  publishedTime,
+  modifiedTime,
+  breadcrumbs,
+  items,
+} = Astro.props;
 
 // Pre-paint theme bootstrap: applies the persisted (or default dark) theme
 // before first render. It must stay inline, so constants are interpolated
@@ -71,6 +80,7 @@ Astro.csp?.insertScriptHash(`sha256-${bootstrapHash}`);
       description={description}
       type={type}
       noindex={noindex}
+      isNotFound={isNotFound}
       publishedTime={publishedTime}
       modifiedTime={modifiedTime}
       breadcrumbs={breadcrumbs}

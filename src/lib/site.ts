@@ -1,122 +1,26 @@
 /**
- * Single source of truth for site identity and copy.
+ * Single source of truth for the runtime site configuration and copy.
  *
  * Change the homepage here: edit `pages.home`. Adding another page means
  * adding a key under `pages` and rendering it from the matching route.
+ *
+ * Type definitions live in `site.types.ts` and are re-exported here, so
+ * `@/lib/site` remains the single import path for both the config and its types.
  */
-export type SiteLink = {
-  label: string;
-  href: string;
-};
+import type { SiteConfig } from "@/lib/site.types";
 
-export type SiteTrack = {
-  label: string;
-  title: string;
-  artist: string;
-  album: string;
-  audio: string;
-  href: string;
-};
-
-export type SiteResource = {
-  title: string;
-  source: string;
-  href: string;
-};
-
-export type SiteWidgets = {
-  music: SiteTrack;
-};
-
-export type SitePage = {
-  /** Canonical route, e.g. `/` or `/about/`. Drives the generated OG image path. */
-  route: string;
-  /** Visible page heading. */
-  title: string;
-  /**
-   * Document title base for `<title>` and Open Graph. Use it when the visible
-   * heading is not descriptive enough for search; the site-name suffix is
-   * appended centrally by `buildPageSeo()`.
-   */
-  seoTitle?: string;
-  /** Page-specific description used by the meta tags, social card, and listings. */
-  description: string;
-  /** Small label above the title on the generated social card. */
-  eyebrow?: string;
-  intro: string;
-  widgets?: SiteWidgets;
-  resources?: {
-    heading: string;
-    items: readonly SiteResource[];
-  };
-  techStack?: {
-    heading: string;
-    items: readonly SiteLink[];
-  };
-};
-
-export type SiteWriting = {
-  /** Canonical archive route. Drives the generated OG image path. */
-  route: string;
-  /** Visible archive heading. */
-  title: string;
-  /** Document title base for the archive; the site-name suffix is appended centrally. */
-  seoTitle: string;
-  description: string;
-  intro: string;
-  empty: string;
-  feedTitle: string;
-  feedDescription: string;
-};
-
-/** An editorial exception to the metadata length warnings, with its reason. */
-export type SiteSeoMetadataException = {
-  route: string;
-  field: "title" | "description";
-  reason: string;
-};
-
-export type SiteSeo = {
-  /** `lang` on `<html>` and `inLanguage` in structured data. */
-  lang: string;
-  /** Open Graph locale, e.g. `en_US`. */
-  ogLocale: string;
-  /** Card used by every page unless it is explicitly noindex. */
-  twitterCard: "summary" | "summary_large_image";
-  /**
-   * Verified handles only — never invent one. Omitted values emit no
-   * `twitter:site` / `twitter:creator` tag at all.
-   */
-  twitter?: {
-    site?: string;
-    creator?: string;
-  };
-  /**
-   * The explicit noindex registry. A built page may only emit
-   * `robots: noindex` if its route appears here, and routes listed here must
-   * actually render noindex. `pnpm check:seo` fails on either mismatch, so a
-   * page cannot be silently excluded from search.
-   */
-  noindexRoutes: readonly string[];
-  /**
-   * Intentional exceptions to the metadata length warnings. Each entry must
-   * name an indexable route, a field, and a reason. Exceptions only silence the
-   * editorial warning; missing metadata, duplicates, and broken assets still
-   * fail the build.
-   */
-  metadataExceptions: readonly SiteSeoMetadataException[];
-};
-
-export type SiteConfig = {
-  name: string;
-  wordmark: string;
-  description: string;
-  url: string;
-  socials: Readonly<Record<string, string>>;
-  seo: SiteSeo;
-  writing: SiteWriting;
-  pages: Readonly<Record<string, SitePage>>;
-};
+export type {
+  SiteConfig,
+  SiteLink,
+  SiteNotFound,
+  SitePage,
+  SiteResource,
+  SiteSeo,
+  SiteSeoMetadataException,
+  SiteTrack,
+  SiteWidgets,
+  SiteWriting,
+} from "@/lib/site.types";
 
 const siteDescription =
   "Personal website of mihidana, featuring writing, useful resources, music, and notes on software, technology, and the web.";
@@ -148,6 +52,15 @@ export const site: SiteConfig = {
     empty: "Nothing published yet. The first piece is on its way.",
     feedTitle: "mihidana",
     feedDescription: "Writing by mihidana.",
+  },
+  notFound: {
+    label: "404",
+    title: "404",
+    description: "This page doesn't exist. The link may be broken, or the page may have moved.",
+    heading: "This page wandered off.",
+    body: "The link may be broken, or the page moved. Nothing is wrong on your end — the rest of the site is still where you left it.",
+    home: { label: "Home", href: "/" },
+    writing: { label: "Browse writing", href: "/blog/" },
   },
   pages: {
     home: {

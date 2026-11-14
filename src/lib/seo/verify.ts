@@ -386,10 +386,17 @@ export async function verifySeo({ distDir }: { distDir: string }): Promise<SeoVe
     const parsed = parsePage(await readFile(htmlPath, "utf8"), htmlPath, distDir);
 
     // `404.html` is a technical response, not a public route. It must never be
-    // indexable, but it is not a shareable page and has no canonical URL.
+    // indexable, and it must not claim a canonical URL or publish structured
+    // data describing a missing page as an ordinary site page.
     if (parsed.relativePath === "404.html") {
       const robots = (first(parsed.metas.get("robots")) ?? "").toLowerCase();
       if (!robots.includes("noindex")) add("/404.html", "technical 404 must ship noindex");
+      if (parsed.canonical.length > 0) {
+        add("/404.html", "technical 404 must not ship a canonical link");
+      }
+      if (parsed.jsonLd.length > 0) {
+        add("/404.html", "technical 404 must not ship structured data");
+      }
       continue;
     }
 

@@ -1,0 +1,38 @@
+---
+/**
+ * Technical 404 response, written by Astro to `dist/404.html` and served by
+ * Cloudflare through `assets.not_found_handling: "404-page"`. It uses the
+ * shared layout for the header, footer, theme bootstrap, and typography, but it
+ * is not a public route: copy lives in `site.notFound`, and the `isNotFound`
+ * metadata flag keeps it noindex with no canonical URL, structured data, or
+ * social card.
+ */
+import Layout from "@/components/layouts/Layout.astro";
+import { Button } from "@/components/ui/button";
+import { site } from "@/lib/site";
+
+const copy = site.notFound;
+---
+
+<Layout title={copy.title} description={copy.description} noindex isNotFound>
+  <div class="flex min-h-[60svh] flex-col justify-center gap-6">
+    <p class="font-mono text-xs tracking-widest text-muted-foreground uppercase">{copy.label}</p>
+
+    <div class="flex max-w-xl flex-col gap-4">
+      <h1 class="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+        {copy.heading}
+      </h1>
+      <p class="text-pretty text-lg text-muted-foreground">{copy.body}</p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
+      <Button href={copy.home.href} class="h-10 px-4">{copy.home.label}</Button>
+      <a
+        href={copy.writing.href}
+        class="text-sm font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:rounded-sm focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+      >
+        {copy.writing.label}
+      </a>
+    </div>
+  </div>
+</Layout>

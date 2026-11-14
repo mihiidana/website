@@ -40,6 +40,12 @@ export type PageSeoInput = {
   description: string;
   type?: SeoPageType;
   noindex?: boolean;
+  /**
+   * Marks the technical 404 response. It is always noindex, and additionally
+   * drops the canonical URL and structured data instead of describing a
+   * missing page as an ordinary public page.
+   */
+  isNotFound?: boolean;
   /** ISO date (`YYYY-MM-DD`) for articles. */
   publishedTime?: string;
   /** ISO date (`YYYY-MM-DD`) for articles edited after publication. */
@@ -65,10 +71,16 @@ export type PageSeo = {
   /** The page's own title, without the site-name suffix. */
   headline: string;
   description: string;
-  canonical: string;
+  /**
+   * Absolute canonical URL. Absent on the technical 404 response, which must
+   * not advertise itself as a public page.
+   */
+  canonical?: string;
   origin: string;
   type: SeoPageType;
   noindex: boolean;
+  /** True only for the technical 404 response. */
+  isNotFound: boolean;
   locale: string;
   siteName: string;
   /**
@@ -107,7 +119,10 @@ export function absoluteUrl(route: string): string {
 
 export function buildPageSeo(input: PageSeoInput): PageSeo {
   const route = normalizeRoute(input.route);
-  const canonical = absoluteUrl(route);
+  const isNotFound = input.isNotFound === true;
+  // A technical 404 is not a public page: it has no canonical URL and no
+  // structured data, and it must never be indexable.
+  const canonical = isNotFound ? undefined : absoluteUrl(route);
   const siteSuffix = ` — ${site.name}`;
   // `title` is the page's own base title. The site name is appended once; a page
   // that already includes it (or *is* it) cannot produce a doubled suffix.
@@ -115,7 +130,7 @@ export function buildPageSeo(input: PageSeoInput): PageSeo {
     input.title === site.name || input.title.endsWith(siteSuffix)
       ? input.title
       : `${input.title}${siteSuffix}`;
-  const noindex = input.noindex === true;
+  const noindex = input.noindex === true || isNotFound;
   const twitterCard = noindex ? "summary" : site.seo.twitterCard;
 
   const image: SocialImage | undefined = noindex
@@ -137,6 +152,7 @@ export function buildPageSeo(input: PageSeoInput): PageSeo {
     origin: new URL(site.url).origin,
     type: input.type ?? "website",
     noindex,
+    isNotFound,
     locale: site.seo.ogLocale,
     siteName: site.name,
     image,
