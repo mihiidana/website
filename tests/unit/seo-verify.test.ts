@@ -18,6 +18,8 @@ type FixturePage = {
   route: string;
   title: string;
   description?: string;
+  /** Extra markup for `<head>`, such as asset links. */
+  head?: string;
   /** Full JSON-LD payload; defaults to a minimal valid graph. */
   jsonLd?: Record<string, unknown>;
 };
@@ -40,7 +42,7 @@ function graph(webPage: Record<string, unknown> = {}): Record<string, unknown> {
 
 function pageHtml(page: FixturePage): string {
   const description = page.description ?? `Description for ${page.route}`;
-  return `<!doctype html><html lang="${site.seo.lang}"><head><title>${page.title}</title><meta name="description" content="${description}"><link rel="canonical" href="${ORIGIN}${page.route}"><script type="application/ld+json">${JSON.stringify(page.jsonLd ?? graph())}</script></head><body></body></html>`;
+  return `<!doctype html><html lang="${site.seo.lang}"><head><title>${page.title}</title><meta name="description" content="${description}"><link rel="canonical" href="${ORIGIN}${page.route}">${page.head ?? ""}<script type="application/ld+json">${JSON.stringify(page.jsonLd ?? graph())}</script></head><body></body></html>`;
 }
 
 async function fixture(pages: FixturePage[]): Promise<string> {
@@ -102,5 +104,20 @@ describe("cross-page checks", () => {
     ]);
 
     expect(message).toContain('duplicate title "Same title"');
+  });
+});
+
+describe("brand asset paths", () => {
+  test("a malformed percent-encoded path is reported, not thrown", async () => {
+    const href = "/favicon-%E0%A4%A.svg";
+    const message = await report([
+      {
+        route: "/",
+        title: site.name,
+        head: `<link rel="icon" type="image/svg+xml" href="${href}">`,
+      },
+    ]);
+
+    expect(message).toContain(`favicon ${href} does not exist in dist/`);
   });
 });

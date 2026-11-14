@@ -360,7 +360,14 @@ export async function verifySeo({ distDir }: { distDir: string }): Promise<SeoVe
   // instead of stat-ing it again per page.
   const existsCache = new Map<string, boolean>();
   const exists = async (pathname: string): Promise<boolean> => {
-    const key = decodeURIComponent(pathname);
+    let key: string;
+    try {
+      key = decodeURIComponent(pathname);
+    } catch {
+      // A malformed escape cannot name a file on disk. Let the caller report
+      // it as a missing asset instead of throwing an unhandled URIError.
+      return false;
+    }
     const cached = existsCache.get(key);
     if (cached !== undefined) return cached;
     const result = await fileExists(distDir, pathname);
