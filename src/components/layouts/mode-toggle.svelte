@@ -1,5 +1,6 @@
 <script lang="ts">
 import { Moon, Sun } from "@lucide/svelte";
+import { onMount } from "svelte";
 
 import { Button } from "@/components/ui/button";
 import { THEME_COLORS, THEME_STORAGE_KEY, type Theme } from "@/lib/theme";
@@ -8,7 +9,14 @@ type ViewTransitionDocument = Document & {
   startViewTransition?: (update: () => void) => { ready: Promise<void> };
 };
 
+let dark = $state(true);
+
+onMount(() => {
+  dark = document.documentElement.classList.contains("dark");
+});
+
 function applyTheme(theme: Theme) {
+  dark = theme === "dark";
   document.documentElement.classList.toggle("dark", theme === "dark");
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", THEME_COLORS[theme]);
 
@@ -62,8 +70,9 @@ function toggleTheme(event: MouseEvent) {
   variant="ghost"
   size="icon"
   class="relative"
-  aria-label="Toggle color theme"
-  title="Toggle color theme"
+  aria-label="Dark theme"
+  aria-pressed={dark}
+  title="Toggle dark theme"
   onclick={toggleTheme}
 >
   <Sun

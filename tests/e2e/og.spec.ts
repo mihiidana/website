@@ -18,46 +18,13 @@ import sharp from "sharp";
 import { ogImagePath } from "../../src/lib/og/paths";
 import { staticOgSpecs } from "../../src/lib/og/specs";
 import { site } from "../../src/lib/site";
+import { builtPages, decodeHtml, meta } from "./dist";
 
 const DIST = new URL("../../dist/", import.meta.url);
 const CONTENT = new URL("../../src/content/blog/", import.meta.url);
 const OG_SIZE = { width: 1200, height: 630 };
 
-type Page = { route: string; html: string };
-
-async function htmlPages(): Promise<Page[]> {
-  const entries = await readdir(DIST, { recursive: true, withFileTypes: true });
-  const pages: Page[] = [];
-
-  for (const entry of entries) {
-    if (!entry.isFile() || !entry.name.endsWith(".html")) continue;
-    const file = join(entry.parentPath, entry.name);
-    const relativePath = relative(DIST.pathname, file).replaceAll("\\", "/");
-    if (relativePath === "404.html") continue;
-    pages.push({
-      route: `/${relativePath}`.replace(/index\.html$/, ""),
-      html: await readFile(file, "utf8"),
-    });
-  }
-
-  return pages.sort((a, b) => a.route.localeCompare(b.route));
-}
-
-function meta(html: string, key: string): string | undefined {
-  const byProperty = html.match(new RegExp(`<meta property="${key}" content="([^"]*)"`))?.[1];
-  return byProperty ?? html.match(new RegExp(`<meta name="${key}" content="([^"]*)"`))?.[1];
-}
-
-function decodeHtml(value: string): string {
-  return value
-    .replaceAll("&amp;", "&")
-    .replaceAll("&quot;", '"')
-    .replaceAll("&#39;", "'")
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">");
-}
-
-const pages = await htmlPages();
+const pages = await builtPages();
 
 test("the build contains every public page", async () => {
   const routes = pages.map((page) => page.route);

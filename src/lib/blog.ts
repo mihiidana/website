@@ -17,10 +17,13 @@ export function postPath(id: string): string {
 /**
  * Newest first. `getCollection()` order is not deterministic, so equal
  * publication dates fall back to the ID to keep listings stable across builds.
+ * Compare IDs as code units: `localeCompare` would follow the host locale.
  */
 export function sortByDate(posts: readonly BlogPost[]): BlogPost[] {
   return [...posts].sort(
-    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf() || a.id.localeCompare(b.id),
+    (a, b) =>
+      b.data.pubDate.valueOf() - a.data.pubDate.valueOf() ||
+      Number(a.id > b.id) - Number(a.id < b.id),
   );
 }
 

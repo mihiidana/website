@@ -1,23 +1,31 @@
 import { expect, test } from "@playwright/test";
 
-import { BASE_URL, PAGES } from "./site";
+import { builtPages } from "./dist";
+import { internalTargets } from "./links";
+import { BASE_URL } from "./site";
 
-// Every internal link must resolve on the built site — catches typos and
-// routes removed without updating navigation.
+// Every internal link on every built page must resolve — catches typos and
+// routes removed without updating an article, not just the two top-level pages.
 test("every internal link resolves", async ({ page }) => {
-  const hrefs = new Set<string>();
+  const pages = await builtPages();
+  expect(pages.length).toBeGreaterThan(0);
 
-  for (const path of PAGES) {
-    await page.goto(path);
-    for (const link of await page.locator('a[href^="/"]').all()) {
-      const href = await link.getAttribute("href");
-      if (href) hrefs.add(href);
-    }
+  const hrefs: string[] = [];
+  for (const entry of pages) {
+    await page.goto(entry.route);
+    hrefs.push(
+      ...(await page
+        .locator("a[href]")
+        .evaluateAll((nodes) =>
+          nodes.map((node) => (node as HTMLAnchorElement).getAttribute("href") ?? ""),
+        )),
+    );
   }
 
-  expect(hrefs.size).toBeGreaterThan(0);
-  for (const href of hrefs) {
-    const response = await page.request.get(new URL(href, BASE_URL).href);
-    expect(response.status(), href).toBeLessThan(400);
+  const targets = internalTargets(hrefs, BASE_URL);
+  expect(targets.length).toBeGreaterThan(0);
+  for (const target of targets) {
+    const response = await page.request.get(target);
+    expect(response.status(), target).toBeLessThan(400);
   }
 });

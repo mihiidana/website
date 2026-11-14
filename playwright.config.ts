@@ -26,6 +26,8 @@ export default defineConfig({
     // Astro auto-backgrounds servers when it detects an agent, which makes
     // the command exit before the port opens. Force foreground here.
     env: { ASTRO_PREVIEW_BACKGROUND: "1" },
-    reuseExistingServer: !process.env.CI,
+    // Never reuse a server from an earlier run: it may be serving a stale
+    // dist/ after a rebuild, which turns the suite into a false green.
+    reuseExistingServer: false,
   },
 });

@@ -17,7 +17,6 @@ function newPage(overrides: Partial<SitePage> = {}): SitePage {
     seoTitle: "About mihidana: Background and Work",
     description: "Background, current work, and the things this site is built with.",
     intro: "Intro",
-    sections: [],
     ...overrides,
   };
 }

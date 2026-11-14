@@ -12,7 +12,7 @@ interface Props {
   class?: string;
   track: SiteTrack;
   /** Build-time optimized artwork URL, derived from `artwork`. */
-  artwork?: string;
+  artwork: string;
 }
 
 let { class: className, track, artwork }: Props = $props();
@@ -151,7 +151,7 @@ $effect(() => {
   <!-- Square artwork panel, full-bleed to the left edge. -->
   <div class="relative aspect-square h-full shrink-0 overflow-hidden">
     <img
-      src={artwork ?? track.artwork}
+      src={artwork}
       alt=""
       width={320}
       height={320}

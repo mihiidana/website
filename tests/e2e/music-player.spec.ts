@@ -27,9 +27,9 @@ test("the music player volume slider and mute button control the audio element",
     .poll(() => page.evaluate(() => document.querySelector("audio")?.volume))
     .toBeGreaterThan(0.5);
 
-  // The button's label changes to "Unmute …" after the click, so use a
-  // stable locator for the post-click assertions.
-  const mute = page.locator("button[aria-pressed]");
+  // The button's label changes to "Unmute …" after the click, so match both
+  // states to keep one stable locator across the assertion.
+  const mute = page.getByRole("button", { name: /mute one trick phony/i });
   await page.getByRole("button", { name: /Mute/ }).click();
   await expect(mute).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("button", { name: /Unmute/ })).toBeVisible();

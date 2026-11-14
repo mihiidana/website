@@ -1,9 +1,8 @@
-import { readdir, readFile } from "node:fs/promises";
-
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 import { site } from "../../src/lib/site";
+import { discoverPosts, sortPosts } from "./content";
 import { PAGES } from "./site";
 
 /**
@@ -15,39 +14,11 @@ import { PAGES } from "./site";
  * No fixture posts are committed — publishing invented writing is forbidden
  * (see PRODUCT.md).
  */
-const CONTENT_DIR = new URL("../../src/content/blog/", import.meta.url);
 const CONTENT_PREFIX = "/blog/";
-
-type Post = { id: string; draft: boolean; pubDate: string; title: string };
-
-async function discoverPosts(): Promise<Post[]> {
-  const files = (await readdir(CONTENT_DIR, { recursive: true })).filter(
-    (file) => file.endsWith(".md") || file.endsWith(".mdx"),
-  );
-
-  const posts: Post[] = [];
-  for (const file of files) {
-    const source = await readFile(new URL(file, CONTENT_DIR), "utf8");
-    const frontmatter = source.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? "";
-    const field = (name: string) =>
-      frontmatter.match(new RegExp(`^${name}:\\s*(.+)$`, "m"))?.[1]?.replace(/^["']|["']$/g, "");
-    posts.push({
-      id: file.replace(/\.mdx?$/, "").replaceAll("\\", "/"),
-      draft: field("draft") === "true",
-      pubDate: field("pubDate") ?? "",
-      title: field("title") ?? "",
-    });
-  }
-  return posts;
-}
 
 const posts = await discoverPosts();
 const drafts = posts.filter((post) => post.draft);
-// Mirrors sortByDate(): newest first, then ID ascending so equal dates keep a
-// stable order across builds.
-const published = posts
-  .filter((post) => !post.draft)
-  .sort((a, b) => Date.parse(b.pubDate) - Date.parse(a.pubDate) || a.id.localeCompare(b.id));
+const published = sortPosts(posts.filter((post) => !post.draft));
 
 test("the blog index links every published post, newest first", async ({ page }) => {
   await page.goto(CONTENT_PREFIX);
